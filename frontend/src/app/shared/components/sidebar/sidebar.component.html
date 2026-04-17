@@ -1,0 +1,39 @@
+<!-- Sidebar navigation - left panel, role based items dikhata hai -->
+<nav class="sidebar" [class.collapsed]="!isOpen">
+
+  <!-- Navigation items - role filtered -->
+  <div class="nav-section">
+    <span class="nav-section-label" *ngIf="isOpen">MONITORING</span>
+
+    <ng-container *ngFor="let item of navItems">
+      <!-- Admin section divider - admin items alag section mein -->
+      <div class="nav-divider" *ngIf="item.adminOnly && isVisible(item) && isAdmin">
+        <span class="nav-section-label" *ngIf="isOpen">ADMIN</span>
+      </div>
+
+      <!-- Nav item - role check karo pehle -->
+      <a *ngIf="isVisible(item)"
+         class="nav-item"
+         [class.active]="isActive(item.route)"
+         [routerLink]="item.route"
+         [matTooltip]="!isOpen ? item.label : ''"
+         matTooltipPosition="right">
+
+        <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+        <span class="nav-label" *ngIf="isOpen">{{ item.label }}</span>
+
+        <!-- Active indicator - left border pe colored line -->
+        <div class="active-indicator" *ngIf="isActive(item.route)"></div>
+      </a>
+    </ng-container>
+  </div>
+
+  <!-- Sidebar footer - version info -->
+  <div class="sidebar-footer" *ngIf="isOpen">
+    <mat-icon class="footer-icon">cloud</mat-icon>
+    <div class="footer-info">
+      <span class="footer-name">CloudOps v1.0</span>
+      <span class="footer-env">GCP Internal</span>
+    </div>
+  </div>
+</nav>
