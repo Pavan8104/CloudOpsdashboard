@@ -1,0 +1,23 @@
+<!-- Root App Component - layout shell -->
+
+<!-- Dashboard layout - navbar + sidebar + content -->
+<div class="app-layout" *ngIf="showLayout">
+
+  <!-- Navbar - top bar, always visible when logged in -->
+  <app-navbar (sidebarToggle)="toggleSidebar()"></app-navbar>
+
+  <!-- Sidebar - left navigation panel -->
+  <app-sidebar [isOpen]="sidebarOpen"></app-sidebar>
+
+  <!-- Main content area - sidabar ke right mein -->
+  <main class="main-content" [class.sidebar-open]="sidebarOpen" [class.sidebar-closed]="!sidebarOpen">
+    <!-- Router outlet - yahan pe page components load hote hain -->
+    <router-outlet></router-outlet>
+  </main>
+
+</div>
+
+<!-- Login page - no layout wrapper -->
+<div class="login-layout" *ngIf="!showLayout">
+  <router-outlet></router-outlet>
+</div>

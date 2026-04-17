@@ -1,0 +1,38 @@
+// Root App Component - layout structure
+// Navbar (64px) + Sidebar (240px or 64px) + Content area
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+// Main content - navbar ke neeche aur sidebar ke right mein
+.main-content {
+  margin-top: 64px;   // Navbar height
+  flex: 1;
+  transition: margin-left 0.25s ease;
+  min-height: calc(100vh - 64px);
+  background-color: #f8f9fa;
+
+  // Sidebar open hone pe left margin adjust karo
+  &.sidebar-open {
+    margin-left: 240px;
+  }
+
+  // Sidebar closed - sirf icons visible hain (64px)
+  &.sidebar-closed {
+    margin-left: 64px;
+  }
+
+  // Mobile pe margin remove karo - sidebar overlay jaisa
+  @media (max-width: 900px) {
+    &.sidebar-open, &.sidebar-closed {
+      margin-left: 0;
+    }
+  }
+}
+
+// Login page - no layout, fullscreen
+.login-layout {
+  min-height: 100vh;
+}
