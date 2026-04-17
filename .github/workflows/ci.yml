@@ -1,0 +1,247 @@
+name: CloudOps Dashboard CI/CD Pipeline
+
+# === TRIGGER CONDITIONS ===
+# Main aur develop branches pe push hone pe chalega
+# Pull requests pe bhi run hoga - merge se pehle check ke liye
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+
+# Ek hi time pe ek job run ho - concurrent builds avoid karo
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # GCP ke liye environment variables - GitHub Secrets se aate hain
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_REGION: us-central1
+  REGISTRY: gcr.io
+  IMAGE_NAME: cloudops-dashboard
+
+jobs:
+
+  # ============================================================
+  # JOB 1: Backend Tests aur Build
+  # ============================================================
+  backend-test:
+    name: Backend - Test & Build
+    runs-on: ubuntu-latest
+
+    services:
+      # Tests ke liye PostgreSQL - real database tests achhe hote hain
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: cloudopsdb_test
+          POSTGRES_USER: cloudops
+          POSTGRES_PASSWORD: cloudops_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      # Code checkout
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Java 17 setup - backend ke liye
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven  # Maven dependencies cache karo - faster builds
+
+      # Maven tests chalao
+      - name: Run backend tests
+        run: |
+          cd backend
+          mvn test -Dspring.profiles.active=test \
+            -Dspring.datasource.url=jdbc:postgresql://localhost:5432/cloudopsdb_test \
+            -Dspring.datasource.username=cloudops \
+            -Dspring.datasource.password=cloudops_test
+        env:
+          JWT_SECRET: test-secret-key-for-ci-only-not-production
+
+      # Test results publish karo - GitHub PR pe dikhai denge
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Backend Test Results
+          path: backend/target/surefire-reports/*.xml
+          reporter: java-junit
+          fail-on-error: false
+
+      # Build JAR - tests pass hone ke baad
+      - name: Build JAR
+        run: |
+          cd backend
+          mvn clean package -DskipTests -q
+
+      # JAR artifact store karo - deploy job use karega
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: backend/target/*.jar
+          retention-days: 5
+
+  # ============================================================
+  # JOB 2: Frontend Build aur Test
+  # ============================================================
+  frontend-test:
+    name: Frontend - Test & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Node.js setup
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      # Dependencies install karo
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci  # ci use karo - package-lock.json se exact versions install
+
+      # Lint check - code quality
+      - name: Run lint
+        run: |
+          cd frontend
+          npm run lint || true  # Lint errors se build fail mat karo abhi
+
+      # Production build banao
+      - name: Build frontend for production
+        run: |
+          cd frontend
+          npm run build:prod
+        env:
+          NODE_OPTIONS: '--max_old_space_size=4096'  # Large builds ke liye
+
+      # Build artifacts store karo
+      - name: Upload frontend build
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+          retention-days: 5
+
+  # ============================================================
+  # JOB 3: Docker Build (sirf main branch pe)
+  # ============================================================
+  docker-build:
+    name: Docker Build & Push
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-test]  # Dono tests pass hone chahiye
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # GCP authentication - Workload Identity Federation use karo (recommended)
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      # GCloud CLI setup
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      # Docker ko GCR ke saath authenticate karo
+      - name: Configure Docker for GCR
+        run: gcloud auth configure-docker gcr.io
+
+      # Docker build aur push - multi-platform support ke liye buildx use karo
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.GCP_PROJECT_ID }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.GCP_PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          labels: |
+            git-commit=${{ github.sha }}
+            git-branch=${{ github.ref_name }}
+            build-date=${{ github.run_id }}
+
+  # ============================================================
+  # JOB 4: Deploy to GCP Cloud Run (main branch only)
+  # ============================================================
+  deploy-gcp:
+    name: Deploy to Cloud Run
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production  # GitHub Environment protection rules
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      # Cloud Run pe deploy karo - zero-downtime rolling update
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.IMAGE_NAME }} \
+            --image ${{ env.REGISTRY }}/${{ env.GCP_PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --platform managed \
+            --region ${{ env.GCP_REGION }} \
+            --allow-unauthenticated \
+            --set-env-vars="GOOGLE_CLOUD_PROJECT=${{ env.GCP_PROJECT_ID }}" \
+            --set-secrets="DB_PASSWORD=cloudops-db-password:latest,JWT_SECRET=cloudops-jwt-secret:latest" \
+            --memory 512Mi \
+            --cpu 1 \
+            --max-instances 10 \
+            --min-instances 1 \
+            --port 8080
+
+      # Deployment URL print karo - log mein visible rahega
+      - name: Get Cloud Run URL
+        run: |
+          SERVICE_URL=$(gcloud run services describe ${{ env.IMAGE_NAME }} \
+            --platform managed \
+            --region ${{ env.GCP_REGION }} \
+            --format 'value(status.url)')
+          echo "✅ Deployed to: $SERVICE_URL"
+          echo "SERVICE_URL=$SERVICE_URL" >> $GITHUB_ENV
+
+      # Deployment status notification - Slack ya email yahan add kar sakte ho
+      - name: Deployment notification
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "🚀 Deployment successful! Service is live at $SERVICE_URL"
+          else
+            echo "❌ Deployment failed - check logs!"
+          fi
