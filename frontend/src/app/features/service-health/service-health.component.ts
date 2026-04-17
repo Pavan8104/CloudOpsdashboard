@@ -3,6 +3,18 @@ import { ServiceHealthService } from '../../core/services/service-health.service
 import { AuthService } from '../../core/auth/auth.service';
 import { ServiceHealth, getStatusClass, getStatusIcon } from '../../shared/models/service-health.model';
 
+import { MatCardModule } from '@angular/material/card';
+import { MatTableModule } from '@angular/material/table';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+
 /**
  * Service Health Component - sabhi GCP services ka status table.
  *
@@ -13,7 +25,21 @@ import { ServiceHealth, getStatusClass, getStatusIcon } from '../../shared/model
 @Component({
   selector: 'app-service-health',
   templateUrl: './service-health.component.html',
-  styleUrls: ['./service-health.component.scss']
+  styleUrls: ['./service-health.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    RouterModule,
+    MatCardModule,
+    MatTableModule,
+    MatChipsModule,
+    MatIconModule,
+    MatButtonModule,
+    MatMenuModule,
+    MatInputModule,
+    MatSelectModule,
+    MatProgressSpinnerModule
+  ]
 })
 export class ServiceHealthComponent implements OnInit {
 

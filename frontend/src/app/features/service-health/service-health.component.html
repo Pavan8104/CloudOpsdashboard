@@ -19,16 +19,16 @@
 
   <!-- Summary chips - quick count view -->
   <div class="summary-chips">
-    <mat-chip (click)="onStatusFilter('')" [selected]="!selectedStatus">
+    <mat-chip (click)="onStatusFilter('')" [class.selected]="!selectedStatus">
       All ({{ totalCount }})
     </mat-chip>
-    <mat-chip class="chip-up" (click)="onStatusFilter('UP')" [selected]="selectedStatus === 'UP'">
+    <mat-chip class="chip-up" (click)="onStatusFilter('UP')" [class.selected]="selectedStatus === 'UP'">
       <mat-icon>check_circle</mat-icon> UP ({{ upCount }})
     </mat-chip>
-    <mat-chip class="chip-degraded" (click)="onStatusFilter('DEGRADED')" [selected]="selectedStatus === 'DEGRADED'">
+    <mat-chip class="chip-degraded" (click)="onStatusFilter('DEGRADED')" [class.selected]="selectedStatus === 'DEGRADED'">
       <mat-icon>warning</mat-icon> Degraded ({{ degradedCount }})
     </mat-chip>
-    <mat-chip class="chip-down" (click)="onStatusFilter('DOWN')" [selected]="selectedStatus === 'DOWN'">
+    <mat-chip class="chip-down" (click)="onStatusFilter('DOWN')" [class.selected]="selectedStatus === 'DOWN'">
       <mat-icon>cancel</mat-icon> Down ({{ downCount }})
     </mat-chip>
   </div>

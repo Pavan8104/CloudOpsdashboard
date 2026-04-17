@@ -25,8 +25,7 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatBadgeModule } from '@angular/material/badge';
 
-// ng2-charts - Chart.js Angular wrapper
-import { NgChartsModule } from 'ng2-charts';
+import { BaseChartDirective, provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 // App modules aur components
 import { AppRoutingModule } from './app-routing.module';
@@ -39,9 +38,8 @@ import { ServiceHealthComponent } from './features/service-health/service-health
 import { IncidentsComponent } from './features/incidents/incidents.component';
 import { ResourceUsageComponent } from './features/resource-usage/resource-usage.component';
 
-// Shared components
-import { NavbarComponent } from './shared/components/navbar/navbar.component';
-import { SidebarComponent } from './shared/components/sidebar/sidebar.component';
+// Shared Module
+import { SharedModule } from './shared/shared.module';
 
 // Core services - interceptors yahan register karte hain
 import { JwtInterceptor } from './core/interceptors/jwt.interceptor';
@@ -61,17 +59,17 @@ import { JwtInterceptor } from './core/interceptors/jwt.interceptor';
     // Feature components - har page ka component yahan declare hota hai
     LoginComponent,
     DashboardComponent,
-    ServiceHealthComponent,
     IncidentsComponent,
     ResourceUsageComponent,
 
-    // Shared layout components
-    NavbarComponent,
-    SidebarComponent
+    // Shared layout components are now in SharedModule
   ],
   imports: [
     // Angular core
     BrowserModule,
+    
+    // Shared Module containing layout components
+    SharedModule,
     BrowserAnimationsModule,  // Material animations ke liye zaroori
     HttpClientModule,
     ReactiveFormsModule,
@@ -79,6 +77,9 @@ import { JwtInterceptor } from './core/interceptors/jwt.interceptor';
 
     // Routing
     AppRoutingModule,
+
+    // Standalone components
+    ServiceHealthComponent,
 
     // Angular Material - sab module ek jagah
     MatToolbarModule,
@@ -101,10 +102,11 @@ import { JwtInterceptor } from './core/interceptors/jwt.interceptor';
     MatDialogModule,
     MatBadgeModule,
 
-    // Charts
-    NgChartsModule
+    // Charts (Standalone Directive in v6+)
+    BaseChartDirective
   ],
   providers: [
+    provideCharts(withDefaultRegisterables()),
     // JWT interceptor - har HTTP request mein token attach hoga
     {
       provide: HTTP_INTERCEPTORS,

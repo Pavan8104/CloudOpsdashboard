@@ -169,7 +169,7 @@
                   {{ incident.severity }}
                 </span>
                 <span class="incident-number">{{ incident.incidentNumber }}</span>
-                <mat-chip [color]="incident.status === 'IN_PROGRESS' ? 'primary' : 'warn'" selected>
+                <mat-chip [color]="incident.status === 'IN_PROGRESS' ? 'primary' : 'warn'">
                   {{ incident.status | titlecase }}
                 </mat-chip>
               </div>
