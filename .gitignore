@@ -1,0 +1,71 @@
+# === BACKEND Java/Maven stuff - ye log commit nahi karne chahiye ===
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+
+# Maven wrapper ka output
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# IntelliJ IDEA - IDE files should stay local bhai
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Eclipse - koi use karta hai toh unke liye
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# VS Code - editor config
+.vscode/
+!.vscode/extensions.json
+
+# === FRONTEND Angular/Node stuff ===
+# node_modules - kabhi bhi commit mat karo, heavy hai
+node_modules/
+dist/
+tmp/
+out-tsc/
+bazel-out/
+
+# Angular cache
+.angular/
+
+# npm logs
+npm-debug.log
+yarn-error.log
+
+# Environment files with secrets - KABHI commit nahi karna
+*.env
+.env
+.env.local
+.env.production
+
+# === OS generated files - har system pe alag hote hain ===
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V8
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# === Docker local stuff ===
+docker-compose.override.yml
+
+# Logs - log files ko track nahi karte
+logs/
+*.log
