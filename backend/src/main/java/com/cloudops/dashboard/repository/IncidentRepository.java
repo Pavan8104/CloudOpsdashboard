@@ -50,14 +50,22 @@ public interface IncidentRepository extends JpaRepository<Incident, Long> {
     @Query("SELECT i FROM Incident i WHERE i.severity IN ('SEV1', 'SEV2') AND i.status NOT IN ('RESOLVED', 'CLOSED') ORDER BY i.severity ASC, i.createdAt ASC")
     List<Incident> findActiveCriticalIncidents();
 
-    // MTTR statistics - last 30 din ke resolved incidents ka average time
-    @Query("SELECT AVG(EXTRACT(EPOCH FROM (i.resolvedAt - i.startedAt))/60) FROM Incident i WHERE i.status = 'RESOLVED' AND i.resolvedAt >= :since")
-    Double getAverageMttrMinutes(@Param("since") LocalDateTime since);
 
-    // Severity aur status ke basis pe count - summary stats ke liye
-    @Query("SELECT i.severity, i.status, COUNT(i) FROM Incident i GROUP BY i.severity, i.status")
-    List<Object[]> getIncidentSummaryBySeverityAndStatus();
+// MTTR statistics - last 30 din ke resolved incidents ka average time
+@Query(value = """
+    SELECT AVG(EXTRACT(EPOCH FROM (resolved_at - started_at)) / 60)
+    FROM incidents
+    WHERE resolved_at IS NOT NULL
+    AND started_at >= :fromDate
+""", nativeQuery = true)
+Double getAverageMttrMinutes(@Param("fromDate") LocalDateTime fromDate);
 
-    // Recently resolved incidents - postmortem queue ke liye
+
+// Severity aur status ke basis pe count - summary stats ke liye
+@Query("SELECT i.severity, i.status, COUNT(i) FROM Incident i GROUP BY i.severity, i.status")
+List<Object[]> getIncidentSummaryBySeverityAndStatus();
+
+
+// Recently resolved incidents - postmortem queue ke liye
     List<Incident> findByStatusOrderByResolvedAtDesc(IncidentStatus status);
 }
