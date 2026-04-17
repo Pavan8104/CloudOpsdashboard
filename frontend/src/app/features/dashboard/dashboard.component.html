@@ -1,0 +1,257 @@
+<!-- Dashboard - Main landing page after login -->
+<div class="dashboard-container">
+
+  <!-- Page header - title aur refresh button -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Operations Dashboard</h1>
+      <p class="page-subtitle">
+        Last updated: {{ lastRefreshed | date:'medium' }}
+      </p>
+    </div>
+    <button mat-stroked-button (click)="onRefresh()" class="refresh-btn">
+      <mat-icon>refresh</mat-icon>
+      Refresh
+    </button>
+  </div>
+
+  <!-- CRITICAL INCIDENT ALERT BANNER - SEV1/SEV2 hone pe dikhta hai -->
+  <div class="critical-alert" *ngIf="criticalIncidents.length > 0">
+    <mat-icon>emergency</mat-icon>
+    <div class="alert-content">
+      <strong>{{ criticalIncidents.length }} Critical Incident(s) Active!</strong>
+      <span>{{ criticalIncidents[0]?.title }}</span>
+    </div>
+    <a mat-button routerLink="/incidents" color="warn">View All →</a>
+  </div>
+
+  <!-- SUMMARY STAT CARDS - top pe 4 cards -->
+  <div class="stats-grid">
+
+    <!-- Total Services -->
+    <mat-card class="stat-card" routerLink="/services" style="cursor:pointer">
+      <div class="stat-icon-wrap blue">
+        <mat-icon>dns</mat-icon>
+      </div>
+      <div class="stat-info">
+        <div class="stat-number">{{ totalServices }}</div>
+        <div class="stat-label">Total Services</div>
+      </div>
+      <div class="stat-sub green" *ngIf="healthyServices">
+        {{ healthyServices }} healthy
+      </div>
+    </mat-card>
+
+    <!-- Services Down -->
+    <mat-card class="stat-card" [class.card-danger]="downServices > 0">
+      <div class="stat-icon-wrap" [class.red]="downServices > 0" [class.green]="downServices === 0">
+        <mat-icon>{{ downServices > 0 ? 'cancel' : 'check_circle' }}</mat-icon>
+      </div>
+      <div class="stat-info">
+        <div class="stat-number" [class.text-danger]="downServices > 0">{{ downServices }}</div>
+        <div class="stat-label">Services Down</div>
+      </div>
+      <div class="stat-sub" [class.text-danger]="downServices > 0" [class.text-success]="downServices === 0">
+        {{ downServices > 0 ? 'Needs attention!' : 'All clear' }}
+      </div>
+    </mat-card>
+
+    <!-- Active Incidents -->
+    <mat-card class="stat-card" routerLink="/incidents" style="cursor:pointer">
+      <div class="stat-icon-wrap" [class.orange]="activeIncidentCount > 0" [class.green]="activeIncidentCount === 0">
+        <mat-icon>warning_amber</mat-icon>
+      </div>
+      <div class="stat-info">
+        <div class="stat-number">{{ activeIncidentCount }}</div>
+        <div class="stat-label">Active Incidents</div>
+      </div>
+      <div class="stat-sub" [class.text-warning]="criticalIncidentCount > 0">
+        {{ criticalIncidentCount }} critical
+      </div>
+    </mat-card>
+
+    <!-- Resource Alerts -->
+    <mat-card class="stat-card">
+      <div class="stat-icon-wrap" [class.red]="alertCount > 0" [class.green]="alertCount === 0">
+        <mat-icon>notifications_active</mat-icon>
+      </div>
+      <div class="stat-info">
+        <div class="stat-number" [class.text-danger]="alertCount > 0">{{ alertCount }}</div>
+        <div class="stat-label">Resource Alerts</div>
+      </div>
+      <div class="stat-sub text-muted">Threshold exceeded</div>
+    </mat-card>
+
+  </div>
+
+  <!-- MAIN CONTENT - two column layout -->
+  <div class="main-grid">
+
+    <!-- LEFT COLUMN -->
+    <div class="left-column">
+
+      <!-- Service Health Overview Card -->
+      <mat-card class="dashboard-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>monitor_heart</mat-icon>
+            Service Health Overview
+          </mat-card-title>
+          <span class="spacer"></span>
+          <a mat-button routerLink="/services" color="primary">View All</a>
+        </mat-card-header>
+
+        <mat-card-content>
+          <!-- Loading state -->
+          <div class="loading-container" *ngIf="isLoadingServices">
+            <mat-spinner diameter="40"></mat-spinner>
+            <span>Loading services...</span>
+          </div>
+
+          <!-- Services table - first 6 services show karo -->
+          <div *ngIf="!isLoadingServices">
+            <div class="chart-container" *ngIf="totalServices > 0">
+              <canvas baseChart
+                [data]="serviceHealthChartData"
+                [options]="serviceHealthChartOptions"
+                [type]="serviceHealthChartType">
+              </canvas>
+            </div>
+
+            <div class="service-list">
+              <div class="service-row" *ngFor="let service of services | slice:0:6">
+                <div class="service-name">
+                  <mat-icon class="service-type-icon">dns</mat-icon>
+                  <span>{{ service.serviceName }}</span>
+                </div>
+                <div class="service-meta">
+                  <span class="region-tag">{{ service.region }}</span>
+                  <span class="status-badge" [class]="'status-' + service.status.toLowerCase()">
+                    {{ service.status }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="empty-state" *ngIf="totalServices === 0">
+              <mat-icon>dns</mat-icon>
+              <p>Koi service monitor nahi ho rahi abhi</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Active Incidents Card -->
+      <mat-card class="dashboard-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>warning_amber</mat-icon>
+            Active Incidents
+          </mat-card-title>
+          <span class="spacer"></span>
+          <!-- ENGINEER/ADMIN hi create kar sakte hain -->
+          <button mat-button color="primary" routerLink="/incidents/create"
+                  *ngIf="authService.isEngineer">
+            + New
+          </button>
+          <a mat-button routerLink="/incidents">View All</a>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="loading-container" *ngIf="isLoadingIncidents">
+            <mat-spinner diameter="40"></mat-spinner>
+          </div>
+
+          <div *ngIf="!isLoadingIncidents">
+            <div class="incident-item" *ngFor="let incident of activeIncidents | slice:0:5">
+              <div class="incident-header">
+                <span class="severity-badge" [class]="'sev' + incident.severity.charAt(3)">
+                  {{ incident.severity }}
+                </span>
+                <span class="incident-number">{{ incident.incidentNumber }}</span>
+                <mat-chip [color]="incident.status === 'IN_PROGRESS' ? 'primary' : 'warn'" selected>
+                  {{ incident.status | titlecase }}
+                </mat-chip>
+              </div>
+              <div class="incident-title">{{ incident.title }}</div>
+              <div class="incident-meta">
+                <span *ngIf="incident.assignedToUsername">
+                  <mat-icon>person</mat-icon> {{ incident.assignedToUsername }}
+                </span>
+                <span>{{ incident.startedAt | date:'short' }}</span>
+              </div>
+            </div>
+
+            <div class="empty-state" *ngIf="activeIncidents.length === 0">
+              <mat-icon>check_circle</mat-icon>
+              <p>Sab theek hai - koi active incident nahi!</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="right-column">
+
+      <!-- Resource Utilization Summary -->
+      <mat-card class="dashboard-card">
+        <mat-card-header>
+          <mat-card-title>
+            <mat-icon>bar_chart</mat-icon>
+            Resource Utilization
+          </mat-card-title>
+          <span class="spacer"></span>
+          <a mat-button routerLink="/resources">Details</a>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="loading-container" *ngIf="isLoadingMetrics">
+            <mat-spinner diameter="40"></mat-spinner>
+          </div>
+
+          <div *ngIf="!isLoadingMetrics">
+            <div class="metric-item" *ngFor="let metric of latestMetrics | slice:0:8">
+              <div class="metric-header">
+                <span class="metric-name">{{ metric.serviceName }}</span>
+                <span class="metric-type">{{ metric.resourceType }}</span>
+              </div>
+              <!-- Progress bar - utilization percentage show karo -->
+              <mat-progress-bar
+                [mode]="'determinate'"
+                [value]="metric.utilizationPercentage || metric.value"
+                [color]="(metric.utilizationPercentage || metric.value) >= 80 ? 'warn' : 'primary'">
+              </mat-progress-bar>
+              <div class="metric-footer">
+                <span class="metric-value">{{ metric.value | number:'1.0-1' }} {{ metric.unit }}</span>
+                <span class="metric-pct" [class.text-danger]="(metric.utilizationPercentage || 0) >= 80">
+                  {{ (metric.utilizationPercentage || metric.value) | number:'1.0-1' }}%
+                </span>
+              </div>
+            </div>
+
+            <!-- Resource alerts section -->
+            <div *ngIf="alertingResources.length > 0" class="alert-section">
+              <div class="alert-header">
+                <mat-icon>warning</mat-icon>
+                <span>{{ alertingResources.length }} Resources Exceeding Threshold</span>
+              </div>
+              <div class="alert-item" *ngFor="let alert of alertingResources | slice:0:3">
+                <span>{{ alert.serviceName }} - {{ alert.resourceType }}</span>
+                <span class="text-danger">{{ alert.value | number:'1.0-1' }}%</span>
+              </div>
+            </div>
+
+            <div class="empty-state" *ngIf="latestMetrics.length === 0">
+              <mat-icon>bar_chart</mat-icon>
+              <p>Metrics load ho rahi hain...</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+    </div>
+
+  </div>
+</div>
