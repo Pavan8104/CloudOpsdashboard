@@ -1,0 +1,115 @@
+version: '3.8'
+
+# CloudOps Dashboard - Full Stack Docker Compose
+# Yeh file local development ke liye ek command mein sab kuch start karta hai:
+# docker-compose up -d
+#
+# Services:
+# 1. postgres - Database
+# 2. backend - Spring Boot API (port 8080)
+# 3. frontend - Angular dev server (port 4200)
+#
+# GCP pe deploy karne ke liye Cloud Run + Cloud SQL use karo - yeh local only hai
+
+services:
+
+  # === PostgreSQL Database ===
+  # Local dev ke liye - production mein GCP Cloud SQL use karo
+  postgres:
+    image: postgres:15-alpine
+    container_name: cloudops-postgres
+    environment:
+      POSTGRES_DB: cloudopsdb
+      POSTGRES_USER: cloudops
+      POSTGRES_PASSWORD: cloudops123  # Local only - production mein secrets manager use karo!
+    ports:
+      - "5432:5432"
+    volumes:
+      # Data persist karo - container restart pe data nahi jayega
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cloudops -d cloudopsdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cloudops-network
+
+  # === Spring Boot Backend ===
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: cloudops-backend
+    ports:
+      - "8080:8080"
+    environment:
+      # Database - postgres service ka naam use karo Docker network mein
+      DB_URL: jdbc:postgresql://postgres:5432/cloudopsdb
+      DB_DRIVER: org.postgresql.Driver
+      DB_USERNAME: cloudops
+      DB_PASSWORD: cloudops123
+      HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+
+      # JWT - strong secret use karo production mein!
+      JWT_SECRET: CloudOpsDevelopmentSecretKeyForLocalDockerComposeDev2024
+
+      # JPA - create table automatically kar do
+      JPA_DDL_AUTO: create-drop
+      SHOW_SQL: "false"
+
+      # CORS - frontend ka URL
+      CORS_ORIGINS: http://localhost:4200
+
+      # GCP project (local pe sirf placeholder)
+      GOOGLE_CLOUD_PROJECT: cloudops-local-dev
+
+      PORT: "8080"
+    depends_on:
+      postgres:
+        condition: service_healthy  # Postgres ready hone ke baad backend start ho
+    networks:
+      - cloudops-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/api/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s  # Spring Boot start hone mein time lagta hai
+
+  # === Angular Frontend ===
+  # Development server use kar rahe hain - production mein nginx serve karega built files
+  frontend:
+    image: node:20-alpine
+    container_name: cloudops-frontend
+    working_dir: /app
+    command: sh -c "npm install && npm start"
+    ports:
+      - "4200:4200"
+    volumes:
+      # Source code mount karo - hot reload ke liye
+      - ./frontend:/app
+      # node_modules ko volume mein rakho - host se mount nahi hoga
+      - /app/node_modules
+    environment:
+      # Angular dev server backend se proxy karta hai
+      NODE_ENV: development
+    depends_on:
+      - backend
+    networks:
+      - cloudops-network
+    stdin_open: true
+    tty: true
+
+# === Volumes ===
+volumes:
+  postgres_data:
+    # Named volume - docker volume ls se dekh sakte ho
+
+# === Networks ===
+networks:
+  cloudops-network:
+    driver: bridge
+    # Services ek dusre ko naam se call kar sakte hain is network mein
