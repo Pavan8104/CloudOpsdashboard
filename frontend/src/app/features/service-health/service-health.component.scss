@@ -1,0 +1,103 @@
+// Service Health Page Styles
+.page-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+
+  .page-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 22px;
+    font-weight: 400;
+    margin-bottom: 4px;
+    mat-icon { color: #1a73e8; }
+  }
+
+  .page-subtitle { font-size: 13px; color: #5f6368; }
+}
+
+.summary-chips {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+
+  mat-chip {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+  }
+
+  .chip-up mat-icon { color: #34a853; }
+  .chip-degraded mat-icon { color: #fbbc04; }
+  .chip-down mat-icon { color: #ea4335; }
+}
+
+.filters-card {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+}
+
+.filters-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+
+  .search-field { flex: 1; min-width: 200px; }
+  mat-form-field { margin-bottom: 0; }
+}
+
+.services-table {
+  width: 100%;
+}
+
+.service-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  mat-icon { color: #1a73e8; flex-shrink: 0; }
+
+  .service-name { font-size: 13px; font-weight: 500; }
+  .service-project { font-size: 11px; color: #5f6368; }
+}
+
+.type-chip {
+  font-size: 11px;
+  padding: 2px 8px;
+  background: #e8f0fe;
+  color: #1967d2;
+  border-radius: 3px;
+}
+
+.status-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  mat-icon { font-size: 16px; height: 16px; width: 16px; }
+}
+
+.region-tag {
+  font-size: 11px;
+  color: #5f6368;
+  font-family: monospace;
+  background: #f1f3f4;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.table-row:hover { background: #f8f9fa; }
+
+.delete-action { color: #ea4335; mat-icon { color: #ea4335; } }

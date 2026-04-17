@@ -1,0 +1,176 @@
+<!-- Service Health Page - GCP services ka status monitor karo -->
+<div class="page-container">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">
+        <mat-icon>monitor_heart</mat-icon>
+        Service Health
+      </h1>
+      <p class="page-subtitle">GCP services ki real-time health monitoring</p>
+    </div>
+    <button mat-raised-button color="primary" routerLink="/services/add"
+            *ngIf="authService.isEngineer">
+      <mat-icon>add</mat-icon>
+      Add Service
+    </button>
+  </div>
+
+  <!-- Summary chips - quick count view -->
+  <div class="summary-chips">
+    <mat-chip (click)="onStatusFilter('')" [selected]="!selectedStatus">
+      All ({{ totalCount }})
+    </mat-chip>
+    <mat-chip class="chip-up" (click)="onStatusFilter('UP')" [selected]="selectedStatus === 'UP'">
+      <mat-icon>check_circle</mat-icon> UP ({{ upCount }})
+    </mat-chip>
+    <mat-chip class="chip-degraded" (click)="onStatusFilter('DEGRADED')" [selected]="selectedStatus === 'DEGRADED'">
+      <mat-icon>warning</mat-icon> Degraded ({{ degradedCount }})
+    </mat-chip>
+    <mat-chip class="chip-down" (click)="onStatusFilter('DOWN')" [selected]="selectedStatus === 'DOWN'">
+      <mat-icon>cancel</mat-icon> Down ({{ downCount }})
+    </mat-chip>
+  </div>
+
+  <!-- Filters bar -->
+  <mat-card class="filters-card">
+    <div class="filters-row">
+      <!-- Search -->
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search services...</mat-label>
+        <input matInput [value]="searchQuery" (input)="onSearchChange($any($event.target).value)">
+        <mat-icon matPrefix>search</mat-icon>
+      </mat-form-field>
+
+      <!-- Region filter -->
+      <mat-form-field appearance="outline">
+        <mat-label>Region</mat-label>
+        <mat-select [value]="selectedRegion" (selectionChange)="onRegionFilter($event.value)">
+          <mat-option value="">All Regions</mat-option>
+          <mat-option *ngFor="let region of regions" [value]="region">{{ region }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-stroked-button (click)="clearFilters()" *ngIf="searchQuery || selectedStatus || selectedRegion">
+        <mat-icon>clear</mat-icon>
+        Clear
+      </button>
+    </div>
+  </mat-card>
+
+  <!-- Loading -->
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-spinner diameter="48"></mat-spinner>
+    <span>Services load ho rahi hain...</span>
+  </div>
+
+  <!-- Services table -->
+  <mat-card *ngIf="!isLoading">
+    <table mat-table [dataSource]="filteredServices" class="services-table">
+
+      <!-- Service Name Column -->
+      <ng-container matColumnDef="serviceName">
+        <th mat-header-cell *matHeaderCellDef>Service Name</th>
+        <td mat-cell *matCellDef="let service">
+          <div class="service-name-cell">
+            <mat-icon>dns</mat-icon>
+            <div>
+              <div class="service-name">{{ service.serviceName }}</div>
+              <div class="service-project" *ngIf="service.gcpProjectId">{{ service.gcpProjectId }}</div>
+            </div>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Type Column -->
+      <ng-container matColumnDef="serviceType">
+        <th mat-header-cell *matHeaderCellDef>Type</th>
+        <td mat-cell *matCellDef="let service">
+          <span class="type-chip">{{ service.serviceType }}</span>
+        </td>
+      </ng-container>
+
+      <!-- Status Column -->
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let service">
+          <div class="status-cell">
+            <mat-icon [style.color]="service.statusColor">{{ getStatusIcon(service.status) }}</mat-icon>
+            <span class="status-badge" [class]="getStatusClass(service.status)">
+              {{ service.status }}
+            </span>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Region Column -->
+      <ng-container matColumnDef="region">
+        <th mat-header-cell *matHeaderCellDef>Region</th>
+        <td mat-cell *matCellDef="let service">
+          <span class="region-tag">{{ service.region }}</span>
+        </td>
+      </ng-container>
+
+      <!-- Response Time Column -->
+      <ng-container matColumnDef="responseTime">
+        <th mat-header-cell *matHeaderCellDef>Latency</th>
+        <td mat-cell *matCellDef="let service">
+          <span [class.text-danger]="service.responseTimeMs > 500"
+                [class.text-warning]="service.responseTimeMs > 200 && service.responseTimeMs <= 500">
+            {{ service.responseTimeMs ? service.responseTimeMs + ' ms' : 'N/A' }}
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- Uptime Column -->
+      <ng-container matColumnDef="uptime">
+        <th mat-header-cell *matHeaderCellDef>Uptime</th>
+        <td mat-cell *matCellDef="let service">
+          <span [class.text-success]="service.uptimePercentage >= 99.9"
+                [class.text-danger]="service.uptimePercentage < 99">
+            {{ service.uptimePercentage ? (service.uptimePercentage | number:'1.1-2') + '%' : 'N/A' }}
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- Last Checked Column -->
+      <ng-container matColumnDef="lastChecked">
+        <th mat-header-cell *matHeaderCellDef>Last Checked</th>
+        <td mat-cell *matCellDef="let service" class="text-muted">
+          {{ service.lastCheckedAt | date:'short' }}
+        </td>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let service">
+          <button mat-icon-button [matMenuTriggerFor]="actionMenu" *ngIf="authService.isEngineer">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #actionMenu="matMenu">
+            <button mat-menu-item>
+              <mat-icon>edit</mat-icon> Edit
+            </button>
+            <button mat-menu-item (click)="deleteService(service.id)"
+                    *ngIf="authService.isAdmin" class="delete-action">
+              <mat-icon>delete</mat-icon> Remove
+            </button>
+          </mat-menu>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
+
+    </table>
+
+    <!-- Empty state -->
+    <div class="empty-state" *ngIf="filteredServices.length === 0 && !isLoading">
+      <mat-icon>dns</mat-icon>
+      <p>Koi service nahi mili - filters clear karo ya naya service add karo</p>
+    </div>
+  </mat-card>
+
+</div>
