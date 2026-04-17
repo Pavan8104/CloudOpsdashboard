@@ -1,0 +1,239 @@
+// CloudOps Dashboard - Global Styles
+// Yahan sab kuch hai jo poori app pe apply hota hai.
+// Component-specific styles unke apne .scss files mein hain.
+// Angular Material ka theme already angular.json mein include hai.
+
+// === GOOGLE CLOUD INSPIRED COLOR PALETTE ===
+// GCP ke branding colors use kar rahe hain - familiar feel ke liye
+:root {
+  --gcp-blue: #4285f4;        // Google blue - primary actions
+  --gcp-red: #ea4335;         // Google red - errors, critical alerts
+  --gcp-yellow: #fbbc04;      // Google yellow - warnings
+  --gcp-green: #34a853;       // Google green - success, healthy status
+  --gcp-dark: #202124;        // Dark background - sidebar
+  --gcp-surface: #f8f9fa;     // Light background
+  --gcp-border: #dadce0;      // Subtle borders
+
+  // Status colors - dashboard badges ke liye
+  --status-up: #34a853;
+  --status-down: #ea4335;
+  --status-degraded: #fbbc04;
+  --status-maintenance: #4285f4;
+  --status-unknown: #9aa0a6;
+
+  // Severity colors - incident badges ke liye
+  --sev1: #ea4335;
+  --sev2: #ff6d00;
+  --sev3: #fbbc04;
+  --sev4: #4285f4;
+}
+
+// === BASE STYLES ===
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  font-size: 14px;
+  background-color: var(--gcp-surface);
+  color: #3c4043;
+  // Scrollbar thodi subtle banao
+  scrollbar-width: thin;
+  scrollbar-color: #bdc1c6 transparent;
+}
+
+// === CUSTOM SCROLLBAR ===
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #bdc1c6;
+  border-radius: 3px;
+}
+
+// === TYPOGRAPHY HELPERS ===
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-weight: 500;
+}
+
+// === STATUS BADGE STYLES ===
+// Yeh classes poori app mein use hote hain - service status, incident badges
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &.status-up {
+    background-color: #e6f4ea;
+    color: #1e8e3e;
+  }
+
+  &.status-down {
+    background-color: #fce8e6;
+    color: #c5221f;
+  }
+
+  &.status-degraded {
+    background-color: #fef7e0;
+    color: #b06000;
+  }
+
+  &.status-maintenance {
+    background-color: #e8f0fe;
+    color: #1967d2;
+  }
+
+  &.status-unknown {
+    background-color: #f1f3f4;
+    color: #5f6368;
+  }
+
+  // Status dot indicator - colored circle
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: currentColor;
+  }
+}
+
+// === SEVERITY BADGES ===
+.severity-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+
+  &.sev1 { background: var(--sev1); color: white; }
+  &.sev2 { background: var(--sev2); color: white; }
+  &.sev3 { background: var(--sev3); color: #202124; }
+  &.sev4 { background: var(--sev4); color: white; }
+}
+
+// === CARD STYLES ===
+// Angular Material mat-card override - thoda custom look
+.dashboard-card {
+  border-radius: 8px !important;
+  border: 1px solid var(--gcp-border) !important;
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15) !important;
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 1px 3px 0 rgba(60, 64, 67, 0.3), 0 4px 8px 3px rgba(60, 64, 67, 0.15) !important;
+  }
+}
+
+// === LOADING STATE ===
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  flex-direction: column;
+  gap: 16px;
+  color: #5f6368;
+}
+
+// === EMPTY STATE ===
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #5f6368;
+
+  mat-icon {
+    font-size: 48px;
+    height: 48px;
+    width: 48px;
+    opacity: 0.4;
+    margin-bottom: 12px;
+  }
+}
+
+// === RESPONSIVE GRID ===
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// === UTILITY CLASSES ===
+.text-success { color: var(--gcp-green); }
+.text-danger { color: var(--gcp-red); }
+.text-warning { color: var(--gcp-yellow); }
+.text-info { color: var(--gcp-blue); }
+.text-muted { color: #5f6368; }
+
+.mt-16 { margin-top: 16px; }
+.mb-16 { margin-bottom: 16px; }
+.p-16 { padding: 16px; }
+
+// Truncate long text - table mein useful hai
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// === CHART CONTAINER ===
+// ng2-charts ka default container yahan style karo
+.chart-container {
+  position: relative;
+  height: 250px;
+  width: 100%;
+}
