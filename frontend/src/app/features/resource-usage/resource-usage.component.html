@@ -1,0 +1,198 @@
+<!-- Resource Usage Page - CPU, Memory, Network charts -->
+<div class="page-container">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">
+        <mat-icon>bar_chart</mat-icon>
+        Resource Utilization
+      </h1>
+      <p class="page-subtitle">GCP services ka CPU, Memory aur Network usage dekho</p>
+    </div>
+  </div>
+
+  <!-- Controls bar - service select aur time range -->
+  <mat-card class="controls-card">
+    <div class="controls-row">
+      <!-- Service selector -->
+      <mat-form-field appearance="outline">
+        <mat-label>Service</mat-label>
+        <mat-select [value]="selectedService" (selectionChange)="onServiceChange($event.value)">
+          <mat-option *ngFor="let service of serviceNames" [value]="service">
+            {{ service }}
+          </mat-option>
+        </mat-select>
+        <mat-icon matPrefix>dns</mat-icon>
+      </mat-form-field>
+
+      <!-- Time range buttons -->
+      <div class="time-range-btns">
+        <button *ngFor="let range of timeRanges"
+                mat-button
+                [class.active-range]="selectedTimeRange === range.hours"
+                (click)="onTimeRangeChange(range.hours)">
+          {{ range.label }}
+        </button>
+      </div>
+    </div>
+  </mat-card>
+
+  <!-- Alert banner - threshold exceed kiye hue resources -->
+  <div class="alert-banner" *ngIf="alertingResources.length > 0">
+    <mat-icon>warning</mat-icon>
+    <span>{{ alertingResources.length }} resource(s) threshold exceed kar rahe hain!</span>
+    <div class="alert-pills">
+      <span class="alert-pill" *ngFor="let alert of alertingResources | slice:0:3">
+        {{ alert.serviceName }} {{ alert.resourceType }}: {{ alert.value | number:'1.0-1' }}%
+      </span>
+    </div>
+  </div>
+
+  <!-- Current metrics gauges - selected service ke liye -->
+  <div class="gauges-row" *ngIf="selectedService">
+    <!-- CPU Gauge -->
+    <mat-card class="gauge-card">
+      <div class="gauge-header">
+        <mat-icon>memory</mat-icon>
+        <span>CPU Usage</span>
+      </div>
+      <div class="gauge-value" [style.color]="getUtilizationColor(cpuUsage)">
+        {{ cpuUsage | number:'1.0-1' }}%
+      </div>
+      <mat-progress-bar
+        [mode]="'determinate'"
+        [value]="cpuUsage"
+        [color]="cpuUsage >= 80 ? 'warn' : 'primary'">
+      </mat-progress-bar>
+      <div class="gauge-label">{{ selectedService }}</div>
+    </mat-card>
+
+    <!-- Memory Gauge -->
+    <mat-card class="gauge-card">
+      <div class="gauge-header">
+        <mat-icon>storage</mat-icon>
+        <span>Memory Usage</span>
+      </div>
+      <div class="gauge-value" [style.color]="getUtilizationColor(memoryUsage)">
+        {{ memoryUsage | number:'1.0-1' }}%
+      </div>
+      <mat-progress-bar
+        [mode]="'determinate'"
+        [value]="memoryUsage"
+        [color]="memoryUsage >= 80 ? 'warn' : 'primary'">
+      </mat-progress-bar>
+      <div class="gauge-label">{{ selectedService }}</div>
+    </mat-card>
+  </div>
+
+  <!-- Charts grid -->
+  <div class="charts-grid">
+
+    <!-- CPU Chart -->
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>memory</mat-icon>
+          CPU Usage - {{ selectedService }}
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="loading-container" *ngIf="isLoading">
+          <mat-spinner diameter="40"></mat-spinner>
+        </div>
+        <div class="chart-container" *ngIf="!isLoading">
+          <canvas baseChart
+            [data]="cpuChartData"
+            [options]="lineChartOptions"
+            [type]="lineChartType">
+          </canvas>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Memory Chart -->
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>storage</mat-icon>
+          Memory Usage - {{ selectedService }}
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="loading-container" *ngIf="isLoading">
+          <mat-spinner diameter="40"></mat-spinner>
+        </div>
+        <div class="chart-container" *ngIf="!isLoading">
+          <canvas baseChart
+            [data]="memoryChartData"
+            [options]="lineChartOptions"
+            [type]="lineChartType">
+          </canvas>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+  </div>
+
+  <!-- All services metrics table -->
+  <mat-card class="metrics-table-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>table_chart</mat-icon>
+        Current Metrics - All Services
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <table mat-table [dataSource]="latestMetrics" class="metrics-table">
+
+        <ng-container matColumnDef="service">
+          <th mat-header-cell *matHeaderCellDef>Service</th>
+          <td mat-cell *matCellDef="let m">{{ m.serviceName }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="type">
+          <th mat-header-cell *matHeaderCellDef>Metric</th>
+          <td mat-cell *matCellDef="let m">{{ getResourceTypeLabel(m.resourceType) }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="value">
+          <th mat-header-cell *matHeaderCellDef>Value</th>
+          <td mat-cell *matCellDef="let m">
+            <strong [style.color]="getUtilizationColor(m.utilizationPercentage || m.value)">
+              {{ m.value | number:'1.0-1' }} {{ m.unit }}
+            </strong>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="utilization">
+          <th mat-header-cell *matHeaderCellDef>Utilization</th>
+          <td mat-cell *matCellDef="let m">
+            <mat-progress-bar
+              [mode]="'determinate'"
+              [value]="m.utilizationPercentage || m.value"
+              [color]="(m.utilizationPercentage || m.value) >= 80 ? 'warn' : 'primary'"
+              style="width: 100px; display: inline-block;">
+            </mat-progress-bar>
+            <span class="util-pct">{{ (m.utilizationPercentage || m.value) | number:'1.0-0' }}%</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="region">
+          <th mat-header-cell *matHeaderCellDef>Region</th>
+          <td mat-cell *matCellDef="let m" class="text-muted">{{ m.region }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="recorded">
+          <th mat-header-cell *matHeaderCellDef>Recorded At</th>
+          <td mat-cell *matCellDef="let m" class="text-muted">{{ m.recordedAt | date:'short' }}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="['service','type','value','utilization','region','recorded']"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['service','type','value','utilization','region','recorded'];"
+            [class.alert-row]="row.alertTriggered"></tr>
+      </table>
+    </mat-card-content>
+  </mat-card>
+
+</div>
