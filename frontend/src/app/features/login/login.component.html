@@ -1,0 +1,130 @@
+<!-- Login Page - CloudOps Dashboard ka welcome screen -->
+<div class="login-page">
+
+  <!-- Left panel - branding aur feature highlights -->
+  <div class="login-left">
+    <div class="brand-section">
+      <mat-icon class="brand-icon">cloud</mat-icon>
+      <h1>CloudOps Dashboard</h1>
+      <p>Google Cloud operations aur monitoring ke liye ek jagah sab kuch</p>
+    </div>
+
+    <!-- Feature list - kya kya milega yahan -->
+    <div class="features-list">
+      <div class="feature-item">
+        <mat-icon>monitor_heart</mat-icon>
+        <div>
+          <h3>Real-time Service Health</h3>
+          <p>GCP services ka live status monitor karo</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <mat-icon>warning_amber</mat-icon>
+        <div>
+          <h3>Incident Management</h3>
+          <p>SEV1-SEV4 incidents track aur resolve karo</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <mat-icon>bar_chart</mat-icon>
+        <div>
+          <h3>Resource Metrics</h3>
+          <p>CPU, Memory, Network usage visualize karo</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right panel - actual login form -->
+  <div class="login-right">
+    <mat-card class="login-card">
+      <mat-card-header>
+        <div class="login-header">
+          <mat-icon class="login-icon">lock</mat-icon>
+          <h2>Sign In</h2>
+          <p>Apne CloudOps account mein login karo</p>
+        </div>
+      </mat-card-header>
+
+      <mat-card-content>
+
+        <!-- Error banner - login fail hone pe dikhta hai -->
+        <div class="error-banner" *ngIf="errorMessage">
+          <mat-icon>error_outline</mat-icon>
+          <span>{{ errorMessage }}</span>
+        </div>
+
+        <!-- Login Form -->
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+
+          <!-- Username field -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Username</mat-label>
+            <input
+              matInput
+              formControlName="username"
+              placeholder="apna username daalo"
+              autocomplete="username">
+            <mat-icon matPrefix>person</mat-icon>
+            <mat-error *ngIf="usernameControl?.hasError('required')">
+              Username required hai bhai
+            </mat-error>
+            <mat-error *ngIf="usernameControl?.hasError('minlength')">
+              Username kam se kam 3 characters ka hona chahiye
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Password field - visibility toggle ke saath -->
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Password</mat-label>
+            <input
+              matInput
+              [type]="hidePassword ? 'password' : 'text'"
+              formControlName="password"
+              placeholder="••••••••"
+              autocomplete="current-password">
+            <mat-icon matPrefix>lock</mat-icon>
+            <!-- Eye icon - password dikhao/chhupao -->
+            <button mat-icon-button matSuffix type="button"
+                    (click)="hidePassword = !hidePassword"
+                    [attr.aria-label]="hidePassword ? 'Show password' : 'Hide password'">
+              <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            <mat-error *ngIf="passwordControl?.hasError('required')">
+              Password toh chahiye hi
+            </mat-error>
+            <mat-error *ngIf="passwordControl?.hasError('minlength')">
+              Password 6+ characters ka hona chahiye
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Demo credentials hint - development ke liye helpful -->
+          <div class="demo-hint">
+            <mat-icon>info</mat-icon>
+            <span>Demo: admin / password | engineer1 / password | viewer1 / password</span>
+          </div>
+
+          <!-- Login button - loading state ke saath -->
+          <button
+            mat-raised-button
+            color="primary"
+            type="submit"
+            class="login-btn"
+            [disabled]="isLoading">
+            <mat-spinner diameter="20" *ngIf="isLoading"></mat-spinner>
+            <span *ngIf="!isLoading">
+              <mat-icon>login</mat-icon>
+              Sign In
+            </span>
+          </button>
+
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Footer info -->
+    <div class="login-footer">
+      <span>CloudOps Dashboard v1.0 | Google Cloud Internal Tool</span>
+    </div>
+  </div>
+</div>
