@@ -1,0 +1,62 @@
+// Incidents page styles
+.page-container { padding: 24px; max-width: 1400px; margin: 0 auto; }
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+
+  .page-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 22px;
+    font-weight: 400;
+    margin-bottom: 4px;
+    mat-icon { color: #fbbc04; }
+  }
+  .page-subtitle { font-size: 13px; color: #5f6368; }
+}
+
+.incidents-tabs { background: white; border-radius: 8px; }
+
+.tab-badge {
+  margin-left: 6px;
+  padding: 2px 7px;
+  background: #e8eaed;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+
+  &.warn { background: #fce8e6; color: #c5221f; }
+}
+
+.filters-bar {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+  border-bottom: 1px solid #f1f3f4;
+
+  .search-field { flex: 1; min-width: 200px; }
+  mat-form-field { margin-bottom: 0; }
+}
+
+.table-wrapper { overflow-x: auto; }
+
+.incidents-table { width: 100%; min-width: 800px; }
+
+.inc-number { font-size: 12px; color: #1967d2; background: #e8f0fe; padding: 2px 6px; border-radius: 3px; }
+
+.inc-title { font-size: 13px; font-weight: 500; max-width: 300px; }
+
+.inc-service { font-size: 11px; color: #5f6368; margin-top: 2px; }
+
+// SEV1 rows red highlight - eye catching
+.critical-row { background: rgba(234, 67, 53, 0.04) !important; }
+
+.action-buttons { display: flex; align-items: center; gap: 4px; }
+
+.resolve-btn { font-size: 12px; height: 28px; padding: 0 12px; }

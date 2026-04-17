@@ -1,0 +1,189 @@
+<!-- Incidents Page - Incident management aur tracking -->
+<div class="page-container">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">
+        <mat-icon>warning_amber</mat-icon>
+        Incident Management
+      </h1>
+      <p class="page-subtitle">Production incidents track aur resolve karo</p>
+    </div>
+    <button mat-raised-button color="warn" *ngIf="authService.isEngineer">
+      <mat-icon>add_alert</mat-icon>
+      Create Incident
+    </button>
+  </div>
+
+  <!-- Tab navigation - Active vs All -->
+  <mat-tab-group (selectedIndexChange)="onTabChange($event)" class="incidents-tabs">
+
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon>warning</mat-icon>
+        Active
+        <span class="tab-badge warn" *ngIf="activeCount > 0">{{ activeCount }}</span>
+      </ng-template>
+
+      <ng-container *ngTemplateOutlet="incidentsTable"></ng-container>
+    </mat-tab>
+
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon>list</mat-icon>
+        All Incidents
+        <span class="tab-badge">{{ totalCount }}</span>
+      </ng-template>
+
+      <ng-container *ngTemplateOutlet="incidentsTable"></ng-container>
+    </mat-tab>
+
+  </mat-tab-group>
+
+  <!-- Table template - reuse karo dono tabs mein -->
+  <ng-template #incidentsTable>
+    <!-- Filters -->
+    <div class="filters-bar">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search incidents...</mat-label>
+        <input matInput [value]="searchQuery" (input)="searchQuery = $any($event.target).value; applyFilter()">
+        <mat-icon matPrefix>search</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Severity</mat-label>
+        <mat-select [(value)]="selectedSeverity" (selectionChange)="applyFilter()">
+          <mat-option value="">All</mat-option>
+          <mat-option value="SEV1">SEV1 - Critical</mat-option>
+          <mat-option value="SEV2">SEV2 - Major</mat-option>
+          <mat-option value="SEV3">SEV3 - Minor</mat-option>
+          <mat-option value="SEV4">SEV4 - Info</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-container" *ngIf="isLoading">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+
+    <!-- Incidents table -->
+    <div class="table-wrapper" *ngIf="!isLoading">
+      <table mat-table [dataSource]="filteredIncidents" class="incidents-table">
+
+        <!-- Incident Number -->
+        <ng-container matColumnDef="incidentNumber">
+          <th mat-header-cell *matHeaderCellDef>INC #</th>
+          <td mat-cell *matCellDef="let inc">
+            <code class="inc-number">{{ inc.incidentNumber }}</code>
+          </td>
+        </ng-container>
+
+        <!-- Severity -->
+        <ng-container matColumnDef="severity">
+          <th mat-header-cell *matHeaderCellDef>SEV</th>
+          <td mat-cell *matCellDef="let inc">
+            <span class="severity-badge" [class]="getSeverityClass(inc.severity)">
+              {{ inc.severity }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Title -->
+        <ng-container matColumnDef="title">
+          <th mat-header-cell *matHeaderCellDef>Title</th>
+          <td mat-cell *matCellDef="let inc">
+            <div class="inc-title">{{ inc.title }}</div>
+            <div class="inc-service" *ngIf="inc.affectedServiceName">
+              {{ inc.affectedServiceName }}
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Status -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let inc">
+            <mat-chip [color]="getStatusColor(inc.status)" [selected]="isActiveIncident(inc)">
+              {{ inc.status | titlecase }}
+            </mat-chip>
+          </td>
+        </ng-container>
+
+        <!-- Assigned To -->
+        <ng-container matColumnDef="assigned">
+          <th mat-header-cell *matHeaderCellDef>Assigned To</th>
+          <td mat-cell *matCellDef="let inc" class="text-muted">
+            {{ inc.assignedToFullName || inc.assignedToUsername || '—' }}
+          </td>
+        </ng-container>
+
+        <!-- Affected Service (hidden, shown in title) -->
+        <ng-container matColumnDef="service">
+          <th mat-header-cell *matHeaderCellDef>Service</th>
+          <td mat-cell *matCellDef="let inc" class="text-muted">
+            {{ inc.affectedServiceName || '—' }}
+          </td>
+        </ng-container>
+
+        <!-- Started At -->
+        <ng-container matColumnDef="started">
+          <th mat-header-cell *matHeaderCellDef>Started</th>
+          <td mat-cell *matCellDef="let inc" class="text-muted">
+            {{ inc.startedAt | date:'short' }}
+          </td>
+        </ng-container>
+
+        <!-- MTTR -->
+        <ng-container matColumnDef="mttr">
+          <th mat-header-cell *matHeaderCellDef>MTTR</th>
+          <td mat-cell *matCellDef="let inc">
+            <span [class.text-success]="!isActiveIncident(inc)" [class.text-warning]="isActiveIncident(inc)">
+              {{ inc.mttr || 'Ongoing' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Actions -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let inc">
+            <div class="action-buttons">
+              <!-- Resolve button - active incidents ke liye sirf -->
+              <button mat-stroked-button color="primary" class="resolve-btn"
+                      *ngIf="authService.isEngineer && isActiveIncident(inc)"
+                      (click)="resolveIncident(inc)">
+                Resolve
+              </button>
+              <button mat-icon-button [matMenuTriggerFor]="actionMenu" *ngIf="authService.isEngineer">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #actionMenu="matMenu">
+                <button mat-menu-item>
+                  <mat-icon>edit</mat-icon> Edit
+                </button>
+                <button mat-menu-item (click)="deleteIncident(inc.id)"
+                        *ngIf="authService.isAdmin">
+                  <mat-icon>delete</mat-icon> Delete
+                </button>
+              </mat-menu>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+            [class.critical-row]="row.severity === 'SEV1'"></tr>
+
+      </table>
+
+      <div class="empty-state" *ngIf="filteredIncidents.length === 0">
+        <mat-icon>check_circle</mat-icon>
+        <p *ngIf="selectedTab === 0">Sab theek hai - koi active incident nahi!</p>
+        <p *ngIf="selectedTab === 1">Koi incident nahi mili</p>
+      </div>
+    </div>
+  </ng-template>
+
+</div>
