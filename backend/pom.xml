@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  CloudOps Dashboard - Backend Maven Build File
+  Yeh poora project ka dependency management yahan se hota hai.
+  Koi naya library add karna ho toh seedha yahan aao - sab kuch centralized hai.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Spring Boot parent - ye sab version management handle karta hai, manually nahi karna padta -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.0</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.cloudops</groupId>
+    <artifactId>cloudops-dashboard</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <name>CloudOps Dashboard</name>
+    <description>
+        Enterprise Cloud Operations Dashboard - Google Cloud internal tooling ke liye
+        banaya gaya hai. Service health, incidents, aur resource monitoring sab ek jagah.
+    </description>
+    <packaging>jar</packaging>
+
+    <properties>
+        <java.version>17</java.version>
+        <!-- JWT library version - upgrade karte waqt security changelog zaroor padho -->
+        <jjwt.version>0.12.3</jjwt.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <dependencies>
+
+        <!-- ============================================================ -->
+        <!-- SPRING BOOT CORE - Project ka dil, ye sab chahiye hi chahiye -->
+        <!-- ============================================================ -->
+
+        <!-- Web layer - REST APIs yahi se chalte hain -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Spring Security - authentication aur authorization ka backbone -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+        <!-- JPA + Hibernate - database se baat karne ka civilized tarika -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- Validation - request body validate karne ke liye, @Valid annotation use hota hai -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- Actuator - health endpoints aur metrics ke liye, GCP probes yahi use karte hain -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- ============================================================ -->
+        <!-- DATABASE - PostgreSQL for production, H2 for local testing   -->
+        <!-- ============================================================ -->
+
+        <!-- PostgreSQL driver - production mein GCP Cloud SQL ke saath yahi use hoga -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- H2 in-memory database - local development aur tests ke liye super handy -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- ============================================================ -->
+        <!-- JWT - Token based auth, stateless API ke liye zaroori hai    -->
+        <!-- ============================================================ -->
+
+        <!-- JJWT API - JWT create aur parse karne ka standard way -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>${jjwt.version}</version>
+        </dependency>
+
+        <!-- JJWT Implementation - runtime pe chahiye, compile time nahi -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- JJWT Jackson - JSON serialization ke liye -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- ============================================================ -->
+        <!-- UTILITIES - Developer productivity ke liye                   -->
+        <!-- ============================================================ -->
+
+        <!-- Lombok - boilerplate code se mukti dilata hai, getters/setters sab auto -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- DevTools - development mein auto-restart ke liye, production mein exclude hota hai -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- ============================================================ -->
+        <!-- TESTING - Acha test coverage professional dikhata hai        -->
+        <!-- ============================================================ -->
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Spring Boot Maven plugin - fat JAR banata hai, sab kuch bundled -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!-- Lombok annotation processor ko exclude karo final JAR se -->
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+            <!-- Compiler plugin - Java 17 features use karne ke liye explicitly set karo -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>17</source>
+                    <target>17</target>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- Profiles - different environments ke liye alag configuration -->
+    <profiles>
+        <!-- Local development profile - H2 use karta hai -->
+        <profile>
+            <id>local</id>
+            <properties>
+                <spring.profiles.active>local</spring.profiles.active>
+            </properties>
+        </profile>
+
+        <!-- GCP Cloud profile - Cloud SQL PostgreSQL use karta hai -->
+        <profile>
+            <id>gcp</id>
+            <properties>
+                <spring.profiles.active>gcp</spring.profiles.active>
+            </properties>
+        </profile>
+    </profiles>
+
+</project>
