@@ -1,0 +1,79 @@
+<!-- CloudOps Dashboard Navbar - Top bar jo har page pe dikhta hai -->
+<mat-toolbar class="navbar" color="primary">
+
+  <!-- Left side: Menu toggle aur brand name -->
+  <div class="navbar-left">
+    <!-- Sidebar toggle button - mobile pe important, desktop pe bhi useful -->
+    <button mat-icon-button (click)="onSidebarToggle()" aria-label="Toggle sidebar">
+      <mat-icon>menu</mat-icon>
+    </button>
+
+    <!-- Brand logo aur naam - dashboard pe click karo toh home pe jaoge -->
+    <a class="brand" routerLink="/dashboard">
+      <mat-icon class="brand-icon">cloud</mat-icon>
+      <span class="brand-name">CloudOps</span>
+      <span class="brand-subtitle">Dashboard</span>
+    </a>
+  </div>
+
+  <!-- Spacer - left aur right content ke beech space banata hai -->
+  <span class="spacer"></span>
+
+  <!-- Right side: Status indicator, notifications, user menu -->
+  <div class="navbar-right">
+
+    <!-- System status indicator - quick health check -->
+    <div class="system-status">
+      <mat-icon class="status-icon ok">check_circle</mat-icon>
+      <span class="status-text">All Systems</span>
+    </div>
+
+    <!-- Notifications button - future feature, abhi placeholder hai -->
+    <button mat-icon-button aria-label="Notifications" matTooltip="Notifications">
+      <mat-icon>notifications_none</mat-icon>
+    </button>
+
+    <!-- User profile menu -->
+    <button mat-button [matMenuTriggerFor]="userMenu" class="user-button" *ngIf="currentUser">
+      <!-- User avatar - initials se banate hain jab actual photo nahi ho -->
+      <div class="user-avatar">{{ getUserInitials() }}</div>
+      <div class="user-info">
+        <span class="user-name">{{ currentUser.fullName || currentUser.username }}</span>
+        <span class="user-role">{{ getPrimaryRole() }}</span>
+      </div>
+      <mat-icon>arrow_drop_down</mat-icon>
+    </button>
+
+    <!-- Dropdown menu - profile, settings, logout -->
+    <mat-menu #userMenu="matMenu" class="user-dropdown">
+      <div class="user-menu-header" mat-menu-item disabled>
+        <div class="user-avatar large">{{ getUserInitials() }}</div>
+        <div>
+          <div class="menu-user-name">{{ currentUser?.fullName }}</div>
+          <div class="menu-user-email">{{ currentUser?.email }}</div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <button mat-menu-item routerLink="/profile">
+        <mat-icon>account_circle</mat-icon>
+        <span>Profile</span>
+      </button>
+
+      <button mat-menu-item routerLink="/settings" *ngIf="currentUser?.roles?.includes('ROLE_ADMIN')">
+        <mat-icon>settings</mat-icon>
+        <span>Settings</span>
+      </button>
+
+      <mat-divider></mat-divider>
+
+      <!-- Logout - yahan se click karo aur bye bye -->
+      <button mat-menu-item (click)="logout()" class="logout-btn">
+        <mat-icon>logout</mat-icon>
+        <span>Logout</span>
+      </button>
+    </mat-menu>
+
+  </div>
+</mat-toolbar>
