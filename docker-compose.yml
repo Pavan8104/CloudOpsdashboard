@@ -84,3 +84,4 @@ networks:
 # # env_file: .env can be used instead of inline environment
 # # build.args can pass build-time variables to Dockerfile
 # # pull_policy: always ensures latest image on every start
+# # platform: linux/amd64 for M1/M2 Mac compatibility
