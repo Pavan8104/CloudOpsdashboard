@@ -430,3 +430,4 @@ done
 # Headers: verify via securityheaders.com after deploy
 # CSP: test with Content-Security-Policy-Report-Only first
 # XSS: Angular DomSanitizer used for all dynamic content
+# SQLi: all queries use JPA parameterized statements
