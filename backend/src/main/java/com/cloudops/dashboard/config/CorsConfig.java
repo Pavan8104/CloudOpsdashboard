@@ -33,9 +33,9 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Origins parse karo - comma separated list ho sakti hai
-        List<String> origins = Arrays.asList(allowedOrigins.split(","));
-        configuration.setAllowedOrigins(origins);
+        // Use allowedOriginPatterns so wildcard "*" works with credentials
+        List<String> origins = Arrays.asList(allowedOrigins.trim().split("\\s*,\\s*"));
+        configuration.setAllowedOriginPatterns(origins);
 
         // Standard HTTP methods - DELETE bhi allow karo kyunki API mein use hota hai
         configuration.setAllowedMethods(Arrays.asList(
