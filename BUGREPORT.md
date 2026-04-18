@@ -423,3 +423,4 @@ done
 *CloudOps Dashboard Bug Report v2 — 2026-04-18 — 18 bugs total (9 fixed, 9 open)*
 # OWASP A01-A10 coverage: see projectreport.md security section
 # Pen testing: run OWASP ZAP against staging before prod
+# Dependency audit: mvn dependency-check:check for CVEs
