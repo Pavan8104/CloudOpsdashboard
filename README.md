@@ -1,143 +1,157 @@
-# CloudOps Dashboard 🚀
+# CloudOps Dashboard
 
-**Enterprise-grade Google Cloud Operations Monitoring Platform**
+**Enterprise-grade Cloud Operations Monitoring Platform**
 
-Yeh project ek full-stack enterprise web application hai jo Google Cloud internal tooling ke liye banaya gaya hai. Service health monitoring, incident tracking, aur resource utilization sab ek jagah.
+A full-stack operations dashboard for real-time service health monitoring, incident tracking, resource utilization analytics, and an AI-powered assistant.
 
 ---
 
-## Architecture Overview
+## Live Links
+
+| Service | Link |
+|---|---|
+| Frontend (Docker Hub) | https://hub.docker.com/r/ps8104/cloudops-frontend |
+| Backend (Docker Hub) | https://hub.docker.com/r/ps8104/cloudops-backend |
+| Deploy on Render | https://render.com |
+
+### Deploy in One Command
+```bash
+docker compose up -d
+# Frontend: http://localhost
+# Backend:  http://localhost:8080/api
+```
+
+---
+
+## Architecture
 
 ```
 ┌─────────────────┐    JWT Auth    ┌──────────────────────┐
 │  Angular 17     │  ──────────►  │  Spring Boot 3.2     │
 │  Frontend       │  ◄──────────  │  REST API Backend    │
-│  (Port 4200)    │               │  (Port 8080)         │
+│  Port 80        │               │  Port 8080           │
 └─────────────────┘               └──────────┬───────────┘
                                              │ JPA/Hibernate
                                              ▼
                                   ┌──────────────────────┐
-                                  │  PostgreSQL DB       │
-                                  │  (Port 5432)         │
+                                  │  PostgreSQL 15       │
+                                  │  Port 5432           │
                                   └──────────────────────┘
-```
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Backend | Java 17, Spring Boot 3.2, Spring Security, JWT |
-| Database | PostgreSQL (prod), H2 (local dev) |
-| ORM | JPA/Hibernate |
-| Frontend | Angular 17, Angular Material |
-| Charts | Chart.js + ng2-charts |
-| Auth | JWT (JJWT 0.12.3) |
-| DevOps | Docker, docker-compose, GitHub Actions |
-| Cloud | GCP Cloud Run, Cloud SQL, GCR |
-
-## Quick Start - Local Development
-
-### Prerequisites
-- Java 17+
-- Node.js 20+
-- Maven 3.8+
-- Docker & docker-compose (optional)
-
-### Option 1: Docker Compose (Recommended)
-
-```bash
-# Sab kuch ek command se start karo
-docker-compose up -d
-
-# Logs dekhne ke liye
-docker-compose logs -f backend
-```
-
-Frontend: http://localhost:4200
-Backend API: http://localhost:8080/api
-H2 Console: http://localhost:8080/api/h2-console
-
-### Option 2: Manual Start
-
-**Backend:**
-```bash
-cd backend
-mvn spring-boot:run
-```
-
-**Frontend:**
-```bash
-cd frontend
-npm install
-npm start
-```
-
-## Demo Credentials
-
-| Username | Password | Role |
-|----------|----------|------|
-| admin | password | ADMIN - Full access |
-| engineer1 | password | ENGINEER - Ops access |
-| viewer1 | password | VIEWER - Read only |
-
-## API Endpoints
-
-| Endpoint | Method | Description | Auth |
-|----------|--------|-------------|------|
-| `/api/auth/login` | POST | Login, JWT token milega | Public |
-| `/api/auth/register` | POST | New user register | Public |
-| `/api/services` | GET | All service health | Viewer+ |
-| `/api/services/summary` | GET | Status counts | Viewer+ |
-| `/api/incidents` | GET | All incidents | Viewer+ |
-| `/api/incidents/critical` | GET | SEV1/SEV2 active | Viewer+ |
-| `/api/resources/latest` | GET | Latest metrics | Viewer+ |
-| `/api/resources/alerts` | GET | Threshold alerts | Viewer+ |
-
-## Role Based Access Control
-
-- **ADMIN**: Full access - create/delete services, incidents, manage users
-- **ENGINEER**: Operational access - create/update/resolve incidents, update service status
-- **VIEWER**: Read-only - sirf dashboard dekh sakte hain, kuch change nahi kar sakte
-
-## GCP Deployment
-
-```bash
-# GCP pe deploy karo
-gcloud run deploy cloudops-dashboard \
-  --image gcr.io/YOUR_PROJECT/cloudops-dashboard:latest \
-  --platform managed \
-  --region us-central1 \
-  --set-env-vars="GOOGLE_CLOUD_PROJECT=YOUR_PROJECT"
-```
-
-Required secrets (GCP Secret Manager mein set karo):
-- `cloudops-db-password` - PostgreSQL password
-- `cloudops-jwt-secret` - JWT signing secret
-
-## Project Structure
-
-```
-CloudOps Dashboard/
-├── backend/                    # Spring Boot application
-│   └── src/main/java/com/cloudops/dashboard/
-│       ├── config/             # Security, CORS config
-│       ├── controller/         # REST API controllers
-│       ├── dto/                # Data Transfer Objects
-│       ├── exception/          # Custom exceptions + global handler
-│       ├── model/              # JPA entities
-│       ├── repository/         # Spring Data JPA repos
-│       ├── security/           # JWT filter + UserDetails
-│       └── service/            # Business logic
-├── frontend/                   # Angular 17 application
-│   └── src/app/
-│       ├── core/               # Auth, guards, interceptors, services
-│       ├── features/           # Page components (login, dashboard, etc.)
-│       └── shared/             # Reusable components + models
-├── Dockerfile                  # Multi-stage backend Docker build
-├── docker-compose.yml          # Full stack local setup
-└── .github/workflows/ci.yml    # GitHub Actions CI/CD
 ```
 
 ---
 
-*Built for Google Cloud Internal Tooling | CloudOps Team*
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Angular 17, Angular Material, Chart.js |
+| Backend | Java 17, Spring Boot 3.2, Spring Security |
+| Database | PostgreSQL 15 (prod), H2 (local dev) |
+| Auth | JWT (JJWT 0.12.3), BCrypt cost=12 |
+| DevOps | Docker, Docker Compose, GitHub Actions |
+| Deploy | Render.com (free tier) |
+
+---
+
+## Docker Hub Images
+
+| Image | Tags | Link |
+|---|---|---|
+| Backend | `latest`, `v4` | https://hub.docker.com/r/ps8104/cloudops-backend |
+| Frontend | `latest`, `v4` | https://hub.docker.com/r/ps8104/cloudops-frontend |
+
+Pull manually:
+```bash
+docker pull ps8104/cloudops-backend:latest
+docker pull ps8104/cloudops-frontend:latest
+```
+
+---
+
+## Quick Start (Local)
+
+```bash
+docker compose up -d
+```
+
+Wait ~60 seconds for Spring Boot, then open http://localhost
+
+---
+
+## Demo Credentials
+
+| Username | Password | Role |
+|---|---|---|
+| `admin` | `admin123` | Admin — full access |
+| `engineer1` | `admin123` | Engineer — create/resolve incidents |
+| `viewer1` | `admin123` | Viewer — read only |
+
+---
+
+## Deploy Live (Free — Render.com)
+
+1. Go to https://render.com and sign up free
+2. **New → Web Service → Deploy existing image**
+3. Backend image: `ps8104/cloudops-backend:latest`
+4. Frontend image: `ps8104/cloudops-frontend:latest`
+5. Set environment variables from `.env` file
+6. Your public URL: `https://your-app.onrender.com`
+
+Full deploy guide: see `projectreport.md`
+
+---
+
+## API Endpoints
+
+| Endpoint | Method | Auth | Description |
+|---|---|---|---|
+| `/api/auth/login` | POST | Public | Login, returns JWT |
+| `/api/auth/register` | POST | Public | Register new user |
+| `/api/services` | GET | Viewer+ | All service health |
+| `/api/services/summary` | GET | Viewer+ | Status counts |
+| `/api/incidents` | GET | Viewer+ | All incidents |
+| `/api/incidents/critical` | GET | Viewer+ | SEV1/SEV2 active |
+| `/api/resources/latest` | GET | Viewer+ | Latest metrics |
+| `/api/resources/alerts` | GET | Viewer+ | Threshold alerts |
+| `/api/chatbot/message` | POST | Viewer+ | AI assistant |
+
+---
+
+## Roles
+
+| Role | Permissions |
+|---|---|
+| **ADMIN** | Full access — create, edit, delete, manage users |
+| **ENGINEER** | Create, update, resolve incidents; view all data |
+| **VIEWER** | Read-only — view everything, change nothing |
+
+---
+
+## Project Structure
+
+```
+Cloud OPS dashboard/
+├── backend/                    # Spring Boot API
+│   └── src/main/java/com/cloudops/dashboard/
+│       ├── config/             # SecurityConfig, CorsConfig
+│       ├── controller/         # REST endpoints
+│       ├── service/            # Business logic + ChatbotService
+│       ├── model/              # JPA entities
+│       ├── repository/         # Database queries
+│       └── security/           # JWT filter, token provider
+├── frontend/                   # Angular 17 app
+│   └── src/app/
+│       ├── features/           # Pages: login, dashboard, incidents
+│       └── shared/components/  # Navbar, sidebar, chatbot
+├── Dockerfile                  # Backend multi-stage build
+├── frontend/Dockerfile         # Frontend multi-stage build
+├── docker-compose.yml          # Local full-stack setup
+├── render.yaml                 # Render.com deploy blueprint
+├── projectreport.md            # Full project documentation
+└── BUGREPORT.md                # 18 bugs found and documented
+```
+
+---
+
+*CloudOps Dashboard v1.0 — 210 commits — Secured, Containerized, Production-Ready*
