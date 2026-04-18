@@ -16,22 +16,10 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Global exception handler - sab exceptions yahan catch hoti hain aur proper response mein convert hoti hain.
- *
- * @RestControllerAdvice matlab yeh sab controllers pe apply hoga automatically.
- * Stack traces client ko mat bhejo - security risk hai. Sirf meaningful messages.
- * Har exception type ka apna handler hai - granular control ke liye.
- *
- * Structure: { timestamp, status, error, message, path } - standard error format
- */
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
 
-    /**
-     * 404 - Resource nahi mila - sabse common error
-     */
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
             ResourceNotFoundException ex, WebRequest request) {
@@ -39,38 +27,26 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request);
     }
 
-    /**
-     * 403 - Permission nahi hai - RBAC violation
-     */
     @ExceptionHandler({UnauthorizedException.class, AccessDeniedException.class})
     public ResponseEntity<ErrorResponse> handleUnauthorizedException(
             Exception ex, WebRequest request) {
         log.warn("Access denied: {}", ex.getMessage());
         return buildErrorResponse(HttpStatus.FORBIDDEN,
-            "Aapko yeh action karne ka permission nahi hai", request);
+            "You do not have permission to perform this action.", request);
     }
 
-    /**
-     * 401 - Authentication fail - wrong username/password
-     */
     @ExceptionHandler({AuthenticationException.class, BadCredentialsException.class})
     public ResponseEntity<ErrorResponse> handleAuthenticationException(
             Exception ex, WebRequest request) {
         log.warn("Authentication failed: {}", ex.getMessage());
         return buildErrorResponse(HttpStatus.UNAUTHORIZED,
-            "Invalid username ya password - dobara try karo", request);
+            "Invalid username or password. Please check your credentials.", request);
     }
 
-    /**
-     * 400 - Validation errors - @Valid annotation ke failures
-     * Sab field errors ek saath return karo - user ko bar bar nahi bhejne padenge
-     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(
             MethodArgumentNotValidException ex, WebRequest request) {
         Map<String, String> fieldErrors = new HashMap<>();
-
-        // Sab field errors collect karo - ek baar mein sab batao
         ex.getBindingResult().getAllErrors().forEach(error -> {
             String fieldName = ((FieldError) error).getField();
             String message = error.getDefaultMessage();
@@ -83,7 +59,7 @@ public class GlobalExceptionHandler {
             .timestamp(LocalDateTime.now())
             .status(HttpStatus.BAD_REQUEST.value())
             .error("Validation Failed")
-            .message("Input data mein kuch gadbad hai")
+            .message("One or more fields failed validation.")
             .path(request.getDescription(false).replace("uri=", ""))
             .fieldErrors(fieldErrors)
             .build();
@@ -91,9 +67,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(errorResponse);
     }
 
-    /**
-     * 400 - General bad request
-     */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
             IllegalArgumentException ex, WebRequest request) {
@@ -101,22 +74,14 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
     }
 
-    /**
-     * 500 - Unexpected errors - sab kuch yahan aata hai as last resort
-     * Details mat bhejo client ko - security ke liye important hai
-     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(
             Exception ex, WebRequest request) {
-        // Full exception log karo server pe - debugging ke liye zaroor chahiye
         log.error("Unexpected error occurred: {}", ex.getMessage(), ex);
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
-            "Server pe kuch gadbad ho gayi - team ko inform karo", request);
+            "An unexpected error occurred. Please contact support if the problem persists.", request);
     }
 
-    /**
-     * Standard error response banao - sab handlers yahi use karte hain
-     */
     private ResponseEntity<ErrorResponse> buildErrorResponse(
             HttpStatus status, String message, WebRequest request) {
         ErrorResponse errorResponse = ErrorResponse.builder()
@@ -126,13 +91,9 @@ public class GlobalExceptionHandler {
             .message(message)
             .path(request.getDescription(false).replace("uri=", ""))
             .build();
-
         return ResponseEntity.status(status).body(errorResponse);
     }
 
-    /**
-     * Error response structure - consistent format for all API errors
-     */
     @lombok.Data
     @lombok.Builder
     @lombok.NoArgsConstructor
@@ -143,7 +104,6 @@ public class GlobalExceptionHandler {
         private String error;
         private String message;
         private String path;
-        // Validation errors ke liye - field naam aur error message
         private Map<String, String> fieldErrors;
     }
 }
