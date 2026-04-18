@@ -77,3 +77,4 @@ logs/
 # .angular/cache/
 # .env.local
 # docker-compose.override.yml
+# coverage/
