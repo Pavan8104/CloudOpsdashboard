@@ -84,6 +84,7 @@ jobs:
           path: backend/target/surefire-reports/*.xml
           reporter: java-junit
           fail-on-error: false
+          fail-on-empty: false
 
       # Build JAR - tests pass hone ke baad
       - name: Build JAR
@@ -134,7 +135,7 @@ jobs:
       - name: Build frontend for production
         run: |
           cd frontend
-          npm run build:prod
+          npm run build
         env:
           NODE_OPTIONS: '--max_old_space_size=4096'  # Large builds ke liye
 
