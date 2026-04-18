@@ -1,80 +1,89 @@
-<!-- Login Page - CloudOps Dashboard ka welcome screen -->
 <div class="login-page">
 
-  <!-- Left panel - branding aur feature highlights -->
+  <!-- Left Panel — Branding -->
   <div class="login-left">
     <div class="brand-section">
-      <mat-icon class="brand-icon">cloud</mat-icon>
+      <div class="brand-logo">
+        <mat-icon>cloud_done</mat-icon>
+      </div>
       <h1>CloudOps Dashboard</h1>
-      <p>Google Cloud operations aur monitoring ke liye ek jagah sab kuch</p>
+      <p class="brand-tagline">Unified operations intelligence for your cloud infrastructure</p>
     </div>
 
-    <!-- Feature list - kya kya milega yahan -->
     <div class="features-list">
       <div class="feature-item">
-        <mat-icon>monitor_heart</mat-icon>
+        <div class="feature-icon-wrap">
+          <mat-icon>monitor_heart</mat-icon>
+        </div>
         <div>
           <h3>Real-time Service Health</h3>
-          <p>GCP services ka live status monitor karo</p>
+          <p>Live monitoring of all your services and infrastructure components</p>
         </div>
       </div>
       <div class="feature-item">
-        <mat-icon>warning_amber</mat-icon>
+        <div class="feature-icon-wrap">
+          <mat-icon>warning_amber</mat-icon>
+        </div>
         <div>
           <h3>Incident Management</h3>
-          <p>SEV1-SEV4 incidents track aur resolve karo</p>
+          <p>Track, assign, and resolve SEV1–SEV4 incidents with full audit trail</p>
         </div>
       </div>
       <div class="feature-item">
-        <mat-icon>bar_chart</mat-icon>
+        <div class="feature-icon-wrap">
+          <mat-icon>bar_chart</mat-icon>
+        </div>
         <div>
-          <h3>Resource Metrics</h3>
-          <p>CPU, Memory, Network usage visualize karo</p>
+          <h3>Resource Analytics</h3>
+          <p>Visualize CPU, memory, disk, and network utilization in real time</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon-wrap">
+          <mat-icon>smart_toy</mat-icon>
+        </div>
+        <div>
+          <h3>AI-Powered Assistant</h3>
+          <p>Built-in assistant to help you navigate and understand the platform</p>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Right panel - actual login form -->
+  <!-- Right Panel — Login Form -->
   <div class="login-right">
     <mat-card class="login-card">
       <mat-card-header>
         <div class="login-header">
-          <mat-icon class="login-icon">lock</mat-icon>
+          <div class="login-icon-wrap">
+            <mat-icon>security</mat-icon>
+          </div>
           <h2>Sign In</h2>
-          <p>Apne CloudOps account mein login karo</p>
+          <p>Access your CloudOps account</p>
         </div>
       </mat-card-header>
 
       <mat-card-content>
 
-        <!-- Error banner - login fail hone pe dikhta hai -->
         <div class="error-banner" *ngIf="errorMessage">
           <mat-icon>error_outline</mat-icon>
           <span>{{ errorMessage }}</span>
         </div>
 
-        <!-- Login Form -->
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
 
-          <!-- Username field -->
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Username</mat-label>
             <input
               matInput
               formControlName="username"
-              placeholder="apna username daalo"
+              placeholder="Enter your username"
               autocomplete="username">
             <mat-icon matPrefix>person</mat-icon>
-            <mat-error *ngIf="usernameControl?.hasError('required')">
-              Username required hai bhai
-            </mat-error>
-            <mat-error *ngIf="usernameControl?.hasError('minlength')">
-              Username kam se kam 3 characters ka hona chahiye
-            </mat-error>
+            <mat-error *ngIf="usernameControl?.hasError('required')">Username is required</mat-error>
+            <mat-error *ngIf="usernameControl?.hasError('minlength')">Minimum 3 characters required</mat-error>
           </mat-form-field>
 
-          <!-- Password field - visibility toggle ke saath -->
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Password</mat-label>
             <input
@@ -84,27 +93,20 @@
               placeholder="••••••••"
               autocomplete="current-password">
             <mat-icon matPrefix>lock</mat-icon>
-            <!-- Eye icon - password dikhao/chhupao -->
             <button mat-icon-button matSuffix type="button"
                     (click)="hidePassword = !hidePassword"
                     [attr.aria-label]="hidePassword ? 'Show password' : 'Hide password'">
               <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
             </button>
-            <mat-error *ngIf="passwordControl?.hasError('required')">
-              Password toh chahiye hi
-            </mat-error>
-            <mat-error *ngIf="passwordControl?.hasError('minlength')">
-              Password 6+ characters ka hona chahiye
-            </mat-error>
+            <mat-error *ngIf="passwordControl?.hasError('required')">Password is required</mat-error>
+            <mat-error *ngIf="passwordControl?.hasError('minlength')">Minimum 6 characters required</mat-error>
           </mat-form-field>
 
-          <!-- Demo credentials hint - development ke liye helpful -->
           <div class="demo-hint">
-            <mat-icon>info</mat-icon>
-            <span>Demo: admin / password | engineer1 / password | viewer1 / password</span>
+            <mat-icon>info_outline</mat-icon>
+            <span>Demo credentials: admin / admin123 &nbsp;|&nbsp; engineer1 / admin123 &nbsp;|&nbsp; viewer1 / admin123</span>
           </div>
 
-          <!-- Login button - loading state ke saath -->
           <button
             mat-raised-button
             color="primary"
@@ -112,19 +114,18 @@
             class="login-btn"
             [disabled]="isLoading">
             <mat-spinner diameter="20" *ngIf="isLoading"></mat-spinner>
-            <span *ngIf="!isLoading">
+            <ng-container *ngIf="!isLoading">
               <mat-icon>login</mat-icon>
               Sign In
-            </span>
+            </ng-container>
           </button>
 
         </form>
       </mat-card-content>
     </mat-card>
 
-    <!-- Footer info -->
     <div class="login-footer">
-      <span>CloudOps Dashboard v1.0 | Google Cloud Internal Tool</span>
+      <span>CloudOps Dashboard &copy; {{ currentYear }} &nbsp;&middot;&nbsp; Enterprise Edition v1.0</span>
     </div>
   </div>
 </div>
