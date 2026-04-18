@@ -37,10 +37,7 @@ services:
 
   # === Spring Boot Backend ===
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: runtime
+    image: ps8104/cloudops-backend:latest
     container_name: cloudops-backend
     ports:
       - "8080:8080"
@@ -80,28 +77,16 @@ services:
       start_period: 60s # Spring Boot start hone mein time lagta hai
 
   # === Angular Frontend ===
-  # Development server use kar rahe hain - production mein nginx serve karega built files
   frontend:
-    image: node:20-alpine
+    image: ps8104/cloudops-frontend:latest
     container_name: cloudops-frontend
-    working_dir: /app
-    command: sh -c "export NG_CLI_ANALYTICS=false && npm install && npm start"
     ports:
-      - "4200:4200"
-    volumes:
-      # Source code mount karo - hot reload ke liye
-      - ./frontend:/app
-      # node_modules ko volume mein rakho - host se mount nahi hoga
-      - /app/node_modules
-    environment:
-      # Angular dev server backend se proxy karta hai
-      NODE_ENV: development
+      - "80:80"
     depends_on:
       - backend
     networks:
       - cloudops-network
-    stdin_open: true
-    tty: true
+    restart: unless-stopped
 
 # === Volumes ===
 volumes:

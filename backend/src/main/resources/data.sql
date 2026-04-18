@@ -7,13 +7,13 @@
 -- DEFAULT ADMIN USER
 -- Password: admin123 (BCrypt encoded)
 -- IMPORTANT: Production mein yeh change karo turant!
--- BCrypt hash of "admin123" - online generator se verify kar sakte ho
+-- BCrypt hash of "admin123"
 -- =====================================================
 INSERT INTO users (username, email, password, full_name, enabled, created_at, updated_at)
 VALUES (
     'admin',
     'admin@cloudops.internal',
-    '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.',
+    '$2b$10$iuvciBocxQLcvv7yXeYHUuzZvYT23LOic3bsc79hcoL4DCB0GqMt6',
     'CloudOps Admin',
     true,
     CURRENT_TIMESTAMP,
@@ -25,7 +25,7 @@ INSERT INTO users (username, email, password, full_name, enabled, created_at, up
 VALUES (
     'engineer1',
     'engineer@cloudops.internal',
-    '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.',
+    '$2b$10$iuvciBocxQLcvv7yXeYHUuzZvYT23LOic3bsc79hcoL4DCB0GqMt6',
     'Rahul Kumar (SRE)',
     true,
     CURRENT_TIMESTAMP,
@@ -37,7 +37,7 @@ INSERT INTO users (username, email, password, full_name, enabled, created_at, up
 VALUES (
     'viewer1',
     'viewer@cloudops.internal',
-    '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.',
+    '$2b$10$iuvciBocxQLcvv7yXeYHUuzZvYT23LOic3bsc79hcoL4DCB0GqMt6',
     'Priya Sharma (Product)',
     true,
     CURRENT_TIMESTAMP,
@@ -100,7 +100,7 @@ VALUES
         'SEV4',
         'RESOLVED',
         'INC-20240116-0001',
-        DATEADD(HOUR, -5, CURRENT_TIMESTAMP),
-        DATEADD(HOUR, -5, CURRENT_TIMESTAMP),
-        DATEADD(HOUR, -2, CURRENT_TIMESTAMP)
+        CURRENT_TIMESTAMP - INTERVAL '5 hours',
+        CURRENT_TIMESTAMP - INTERVAL '5 hours',
+        CURRENT_TIMESTAMP - INTERVAL '2 hours'
     );
