@@ -3,7 +3,8 @@ services:
   - type: web
     name: cloudops-backend
     env: docker
-    dockerfilePath: ./Dockerfile
+    image:
+      url: docker.io/ps8104/cloudops-backend:latest
     plan: free
     healthCheckPath: /api/actuator/health
     envVars:
@@ -23,26 +24,24 @@ services:
         value: update
       - key: SQL_INIT_MODE
         value: always
+      - key: SHOW_SQL
+        value: "false"
       - key: CORS_ORIGINS
         value: "*"
       - key: PORT
         value: "8080"
-      - key: SHOW_SQL
-        value: "false"
-      - key: GOOGLE_CLOUD_PROJECT
-        value: cloudops-prod
 
   # === Angular Frontend ===
   - type: web
     name: cloudops-frontend
     env: docker
-    dockerfilePath: ./frontend/Dockerfile
-    rootDir: .
+    image:
+      url: docker.io/ps8104/cloudops-frontend:latest
     plan: free
     envVars:
       - key: BACKEND_URL
         fromService:
           name: cloudops-backend
           type: web
-          property: host
+          property: hostport
           transform: "http://{value}"
