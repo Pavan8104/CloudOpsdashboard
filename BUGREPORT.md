@@ -427,3 +427,4 @@ done
 # Secret rotation: rotate JWT_SECRET every 90 days
 # DB credential rotation: update DB_PASSWORD quarterly
 # SSL: Railway auto-provisions Let's Encrypt certificates
+# Headers: verify via securityheaders.com after deploy
