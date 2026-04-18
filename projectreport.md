@@ -404,3 +404,4 @@ git log --oneline
 
 *CloudOps Dashboard — Built for production, documented for everyone.*
 
+# JWT chosen over sessions for horizontal scalability
