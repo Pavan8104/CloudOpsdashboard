@@ -6,33 +6,30 @@
   min-height: 100vh;
 }
 
-// Main content - navbar ke neeche aur sidebar ke right mein
 .main-content {
-  margin-top: 64px;   // Navbar height
+  margin-top: 64px;
   flex: 1;
   transition: margin-left 0.25s ease;
   min-height: calc(100vh - 64px);
   background-color: #f8f9fa;
+  overflow-x: hidden;
 
-  // Sidebar open hone pe left margin adjust karo
-  &.sidebar-open {
-    margin-left: 240px;
-  }
+  &.sidebar-open  { margin-left: 240px; }
+  &.sidebar-closed { margin-left: 64px; }
 
-  // Sidebar closed - sirf icons visible hain (64px)
-  &.sidebar-closed {
-    margin-left: 64px;
-  }
-
-  // Mobile pe margin remove karo - sidebar overlay jaisa
-  @media (max-width: 900px) {
-    &.sidebar-open, &.sidebar-closed {
-      margin-left: 0;
-    }
+  @media (max-width: 768px) {
+    &.sidebar-open, &.sidebar-closed { margin-left: 0; }
   }
 }
 
 // Login page - no layout, fullscreen
 .login-layout {
   min-height: 100vh;
+}
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 899;
 }

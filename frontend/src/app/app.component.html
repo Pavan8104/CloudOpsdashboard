@@ -1,22 +1,20 @@
-<!-- Root App Component - Layout Shell -->
-
-<!-- Authenticated layout: navbar + sidebar + content + chatbot -->
 <div class="app-layout" *ngIf="showLayout">
 
   <app-navbar (sidebarToggle)="toggleSidebar()"></app-navbar>
 
-  <app-sidebar [isOpen]="sidebarOpen"></app-sidebar>
+  <!-- Mobile overlay to close sidebar -->
+  <div class="sidebar-overlay" *ngIf="isMobile && sidebarOpen" (click)="toggleSidebar()"></div>
 
-  <main class="main-content" [class.sidebar-open]="sidebarOpen" [class.sidebar-closed]="!sidebarOpen">
+  <app-sidebar [isOpen]="sidebarOpen" [isMobile]="isMobile"></app-sidebar>
+
+  <main class="main-content" [class.sidebar-open]="sidebarOpen && !isMobile" [class.sidebar-closed]="!sidebarOpen || isMobile">
     <router-outlet></router-outlet>
   </main>
 
-  <!-- CloudOps Assistant - available on all authenticated pages -->
   <app-chatbot></app-chatbot>
 
 </div>
 
-<!-- Unauthenticated layout: login page only, no chrome -->
 <div class="login-layout" *ngIf="!showLayout">
   <router-outlet></router-outlet>
 </div>

@@ -44,6 +44,7 @@
     border-left: 1px solid rgba(255,255,255,0.4);
     padding-left: 8px;
     margin-left: 4px;
+    @media (max-width: 480px) { display: none; }
   }
 }
 

@@ -33,6 +33,7 @@ export class SidebarComponent implements OnInit {
 
   // Parent se control hota hai - open/closed state
   @Input() isOpen = true;
+  @Input() isMobile = false;
 
   currentRoute = '';
 

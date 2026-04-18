@@ -1,20 +1,23 @@
-// Incidents page styles
-.page-container { padding: 24px; max-width: 1400px; margin: 0 auto; }
+.page-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  @media (max-width: 600px) { padding: 12px; }
+}
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
 
   .page-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 22px;
-    font-weight: 400;
-    margin-bottom: 4px;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 22px; font-weight: 400; margin-bottom: 4px;
     mat-icon { color: #fbbc04; }
+    @media (max-width: 480px) { font-size: 18px; }
   }
   .page-subtitle { font-size: 13px; color: #5f6368; }
 }
@@ -22,40 +25,30 @@
 .incidents-tabs { background: white; border-radius: 8px; }
 
 .tab-badge {
-  margin-left: 6px;
-  padding: 2px 7px;
-  background: #e8eaed;
-  border-radius: 10px;
-  font-size: 11px;
-  font-weight: 600;
-
+  margin-left: 6px; padding: 2px 7px;
+  background: #e8eaed; border-radius: 10px; font-size: 11px; font-weight: 600;
   &.warn { background: #fce8e6; color: #c5221f; }
 }
 
 .filters-bar {
-  display: flex;
-  gap: 12px;
-  padding: 16px;
-  flex-wrap: wrap;
-  align-items: center;
+  display: flex; gap: 12px; padding: 16px; flex-wrap: wrap; align-items: center;
   border-bottom: 1px solid #f1f3f4;
-
-  .search-field { flex: 1; min-width: 200px; }
+  .search-field { flex: 1; min-width: 150px; }
   mat-form-field { margin-bottom: 0; }
+  @media (max-width: 480px) { padding: 8px; gap: 8px; }
 }
 
-.table-wrapper { overflow-x: auto; }
+.table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
-.incidents-table { width: 100%; min-width: 800px; }
+.incidents-table { width: 100%; min-width: 600px; }
 
 .inc-number { font-size: 12px; color: #1967d2; background: #e8f0fe; padding: 2px 6px; border-radius: 3px; }
 
-.inc-title { font-size: 13px; font-weight: 500; max-width: 300px; }
+.inc-title { font-size: 13px; font-weight: 500; max-width: 260px; }
 
 .inc-service { font-size: 11px; color: #5f6368; margin-top: 2px; }
 
-// SEV1 rows red highlight - eye catching
-.critical-row { background: rgba(234, 67, 53, 0.04) !important; }
+.critical-row { background: rgba(234,67,53,0.04) !important; }
 
 .action-buttons { display: flex; align-items: center; gap: 4px; }
 

@@ -7,6 +7,11 @@
   flex-direction: column;
   align-items: flex-end;
   gap: 12px;
+
+  @media (max-width: 480px) {
+    bottom: 12px;
+    right: 12px;
+  }
 }
 
 // === FAB BUTTON ===
@@ -54,6 +59,12 @@
   height: 560px;
   background: #fff;
   border-radius: 20px;
+
+  @media (max-width: 480px) {
+    width: calc(100vw - 24px);
+    height: 70vh;
+    border-radius: 16px;
+  }
   box-shadow: 0 12px 48px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.12);
   display: flex;
   flex-direction: column;

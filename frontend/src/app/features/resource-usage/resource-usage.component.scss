@@ -1,5 +1,7 @@
 // Resource Usage page styles
-.page-container { padding: 24px; max-width: 1400px; margin: 0 auto; }
+.page-container { padding: 24px; max-width: 1400px; margin: 0 auto;
+  @media (max-width: 600px) { padding: 12px; }
+}
 
 .page-header {
   margin-bottom: 20px;
@@ -140,6 +142,14 @@
 }
 
 .metrics-table { width: 100%; }
+
+.table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+.time-range-btns {
+  @media (max-width: 480px) {
+    button { min-width: 44px; font-size: 11px; padding: 0 6px; }
+  }
+}
 
 .util-pct { margin-left: 8px; font-size: 12px; color: #5f6368; }
 
