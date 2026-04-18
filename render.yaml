@@ -1,0 +1,48 @@
+services:
+  # === Spring Boot Backend ===
+  - type: web
+    name: cloudops-backend
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /api/actuator/health
+    envVars:
+      - key: DB_URL
+        value: jdbc:postgresql://dpg-d7heibjeo5us73ddhbh0-a/cloudops_4lfj
+      - key: DB_USERNAME
+        value: cloudops_user
+      - key: DB_PASSWORD
+        value: k6IcvlcyRz0EgTCcaXVvrtiwtEsLRCV5
+      - key: DB_DRIVER
+        value: org.postgresql.Driver
+      - key: HIBERNATE_DIALECT
+        value: org.hibernate.dialect.PostgreSQLDialect
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JPA_DDL_AUTO
+        value: update
+      - key: SQL_INIT_MODE
+        value: always
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: PORT
+        value: "8080"
+      - key: SHOW_SQL
+        value: "false"
+      - key: GOOGLE_CLOUD_PROJECT
+        value: cloudops-prod
+
+  # === Angular Frontend ===
+  - type: web
+    name: cloudops-frontend
+    env: docker
+    dockerfilePath: ./frontend/Dockerfile
+    rootDir: .
+    plan: free
+    envVars:
+      - key: BACKEND_URL
+        fromService:
+          name: cloudops-backend
+          type: web
+          property: host
+          transform: "http://{value}"
