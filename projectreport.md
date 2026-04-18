@@ -410,3 +410,4 @@ git log --oneline
 # DB backup: Render auto-backups daily on free tier
 # Scaling: upgrade Railway plan for more RAM/CPU
 # Runbook: check Railway logs -> check DB -> redeploy
+# API versioning: currently v1 via path prefix /api
