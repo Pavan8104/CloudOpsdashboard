@@ -1,34 +1,19 @@
-# version: '3.8' 
-## Bade bhai version deprecate hogaya hai isliye comment out kardiya
-# CloudOps Dashboard - Full Stack Docker Compose
-# Yeh file local development ke liye ek command mein sab kuch start karta hai:
-# docker-compose up -d
-#
-# Services:
-# 1. postgres - Database
-# 2. backend - Spring Boot API (port 8080)
-# 3. frontend - Angular dev server (port 4200)
-#
-# GCP pe deploy karne ke liye Cloud Run + Cloud SQL use karo - yeh local only hai
-
 services:
 
   # === PostgreSQL Database ===
-  # Local dev ke liye - production mein GCP Cloud SQL use karo
   postgres:
     image: postgres:15-alpine
     container_name: cloudops-postgres
     environment:
       POSTGRES_DB: cloudopsdb
       POSTGRES_USER: cloudops
-      POSTGRES_PASSWORD: cloudops123 # Local only - production mein secrets manager use karo!
+      POSTGRES_PASSWORD: cloudops123
     ports:
       - "5432:5432"
     volumes:
-      # Data persist karo - container restart pe data nahi jayega
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U cloudops -d cloudopsdb" ]
+      test: ["CMD-SHELL", "pg_isready -U cloudops -d cloudopsdb"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -37,64 +22,58 @@ services:
 
   # === Spring Boot Backend ===
   backend:
-    image: ps8104/cloudops-backend:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cloudops-backend:local
     container_name: cloudops-backend
     ports:
       - "8080:8080"
     environment:
-      # Database - postgres service ka naam use karo Docker network mein
       DB_URL: jdbc:postgresql://postgres:5432/cloudopsdb
       DB_DRIVER: org.postgresql.Driver
       DB_USERNAME: cloudops
       DB_PASSWORD: cloudops123
       HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
-
-      # JWT - strong secret use karo production mein!
       JWT_SECRET: CloudOpsDevelopmentSecretKeyForLocalDockerComposeDev2024
-
-      # JPA - create table automatically kar do
       JPA_DDL_AUTO: create-drop
       SHOW_SQL: "false"
-
-      # CORS - frontend ka URL
-      CORS_ORIGINS: http://localhost:4200
-
-      # GCP project (local pe sirf placeholder)
+      CORS_ORIGINS: http://localhost:80,http://localhost
       GOOGLE_CLOUD_PROJECT: cloudops-local-dev
-
       PORT: "8080"
     depends_on:
       postgres:
-        condition: service_healthy # Postgres ready hone ke baad backend start ho
+        condition: service_healthy
     networks:
       - cloudops-network
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/api/actuator/health" ]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/api/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s # Spring Boot start hone mein time lagta hai
+      start_period: 90s
 
   # === Angular Frontend ===
   frontend:
-    image: ps8104/cloudops-frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: cloudops-frontend:local
     container_name: cloudops-frontend
     ports:
       - "80:80"
+    environment:
+      BACKEND_URL: http://backend:8080
     depends_on:
       - backend
     networks:
       - cloudops-network
     restart: unless-stopped
 
-# === Volumes ===
 volumes:
   postgres_data:
-    # Named volume - docker volume ls se dekh sakte ho
 
-    # === Networks ===
 networks:
   cloudops-network:
     driver: bridge
-    # Services ek dusre ko naam se call kar sakte hain is network mein

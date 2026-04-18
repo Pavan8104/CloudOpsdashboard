@@ -5,7 +5,7 @@
  */
 export const environment = {
   production: true,
-  apiUrl: 'https://api.cloudops.internal/api',  // Production backend URL - GCP pe change karo
+  apiUrl: '/api',
   appName: 'CloudOps Dashboard',
   version: '1.0.0',
   debug: false,
