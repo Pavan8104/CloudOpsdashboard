@@ -1,3 +1,10 @@
+databases:
+  # === PostgreSQL Database (Render managed) ===
+  - name: cloudops-db
+    plan: free
+    databaseName: cloudopsdb
+    user: cloudops
+
 services:
   # === Spring Boot Backend ===
   - type: web
@@ -9,11 +16,17 @@ services:
     healthCheckPath: /api/actuator/health
     envVars:
       - key: DB_URL
-        value: jdbc:postgresql://dpg-d7heibjeo5us73ddhbh0-a/cloudops_4lfj
+        fromDatabase:
+          name: cloudops-db
+          property: connectionString
       - key: DB_USERNAME
-        value: cloudops_user
+        fromDatabase:
+          name: cloudops-db
+          property: user
       - key: DB_PASSWORD
-        value: k6IcvlcyRz0EgTCcaXVvrtiwtEsLRCV5
+        fromDatabase:
+          name: cloudops-db
+          property: password
       - key: DB_DRIVER
         value: org.postgresql.Driver
       - key: HIBERNATE_DIALECT
