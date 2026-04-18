@@ -425,3 +425,4 @@ done
 # Pen testing: run OWASP ZAP against staging before prod
 # Dependency audit: mvn dependency-check:check for CVEs
 # Secret rotation: rotate JWT_SECRET every 90 days
+# DB credential rotation: update DB_PASSWORD quarterly
