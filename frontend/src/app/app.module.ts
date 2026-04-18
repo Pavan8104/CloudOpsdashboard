@@ -4,7 +4,6 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
-// Angular Material imports - sab Material components yahan import karo
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -27,61 +26,35 @@ import { MatBadgeModule } from '@angular/material/badge';
 
 import { BaseChartDirective, provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
-// App modules aur components
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-
-// Feature components
 import { LoginComponent } from './features/login/login.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { ServiceHealthComponent } from './features/service-health/service-health.component';
 import { IncidentsComponent } from './features/incidents/incidents.component';
 import { ResourceUsageComponent } from './features/resource-usage/resource-usage.component';
-
-// Shared Module
+import { ChatbotComponent } from './shared/components/chatbot/chatbot.component';
 import { SharedModule } from './shared/shared.module';
-
-// Core services - interceptors yahan register karte hain
 import { JwtInterceptor } from './core/interceptors/jwt.interceptor';
 
-/**
- * Root AppModule - poori Angular application yahan registered hai.
- *
- * Material modules sab import kiye hain - bundle size ke liye tree-shaking pe depend karo.
- * JwtInterceptor HTTP_INTERCEPTORS ke saath provide kiya hai - multi: true important hai.
- * NgChartsModule Chart.js ke saath register hota hai - charts kaam karne ke liye.
- */
 @NgModule({
   declarations: [
-    // Root component
     AppComponent,
-
-    // Feature components - har page ka component yahan declare hota hai
     LoginComponent,
     DashboardComponent,
     IncidentsComponent,
     ResourceUsageComponent,
-
-    // Shared layout components are now in SharedModule
+    ChatbotComponent,
   ],
   imports: [
-    // Angular core
     BrowserModule,
-    
-    // Shared Module containing layout components
     SharedModule,
-    BrowserAnimationsModule,  // Material animations ke liye zaroori
+    BrowserAnimationsModule,
     HttpClientModule,
     ReactiveFormsModule,
     FormsModule,
-
-    // Routing
     AppRoutingModule,
-
-    // Standalone components
     ServiceHealthComponent,
-
-    // Angular Material - sab module ek jagah
     MatToolbarModule,
     MatButtonModule,
     MatIconModule,
@@ -101,17 +74,14 @@ import { JwtInterceptor } from './core/interceptors/jwt.interceptor';
     MatSnackBarModule,
     MatDialogModule,
     MatBadgeModule,
-
-    // Charts (Standalone Directive in v6+)
     BaseChartDirective
   ],
   providers: [
     provideCharts(withDefaultRegisterables()),
-    // JWT interceptor - har HTTP request mein token attach hoga
     {
       provide: HTTP_INTERCEPTORS,
       useClass: JwtInterceptor,
-      multi: true  // Multiple interceptors support ke liye multi: true zaroori hai
+      multi: true
     }
   ],
   bootstrap: [AppComponent]

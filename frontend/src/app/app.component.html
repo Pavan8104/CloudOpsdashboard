@@ -1,23 +1,22 @@
-<!-- Root App Component - layout shell -->
+<!-- Root App Component - Layout Shell -->
 
-<!-- Dashboard layout - navbar + sidebar + content -->
+<!-- Authenticated layout: navbar + sidebar + content + chatbot -->
 <div class="app-layout" *ngIf="showLayout">
 
-  <!-- Navbar - top bar, always visible when logged in -->
   <app-navbar (sidebarToggle)="toggleSidebar()"></app-navbar>
 
-  <!-- Sidebar - left navigation panel -->
   <app-sidebar [isOpen]="sidebarOpen"></app-sidebar>
 
-  <!-- Main content area - sidabar ke right mein -->
   <main class="main-content" [class.sidebar-open]="sidebarOpen" [class.sidebar-closed]="!sidebarOpen">
-    <!-- Router outlet - yahan pe page components load hote hain -->
     <router-outlet></router-outlet>
   </main>
 
+  <!-- CloudOps Assistant - available on all authenticated pages -->
+  <app-chatbot></app-chatbot>
+
 </div>
 
-<!-- Login page - no layout wrapper -->
+<!-- Unauthenticated layout: login page only, no chrome -->
 <div class="login-layout" *ngIf="!showLayout">
   <router-outlet></router-outlet>
 </div>
