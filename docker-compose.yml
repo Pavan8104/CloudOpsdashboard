@@ -80,3 +80,4 @@ networks:
 # # postgres_data volume persists DB across container restarts
 # # restart: unless-stopped ensures auto-recovery on crash
 # # Consider adding deploy.resources.limits for production
+# # logging: driver: json-file with max-size for log rotation
