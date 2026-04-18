@@ -78,3 +78,4 @@ networks:
 # # Health checks ensure containers start in correct order
 # # cloudops-network isolates containers from host network
 # # postgres_data volume persists DB across container restarts
+# # restart: unless-stopped ensures auto-recovery on crash
