@@ -82,3 +82,4 @@ networks:
 # # Consider adding deploy.resources.limits for production
 # # logging: driver: json-file with max-size for log rotation
 # # env_file: .env can be used instead of inline environment
+# # build.args can pass build-time variables to Dockerfile
