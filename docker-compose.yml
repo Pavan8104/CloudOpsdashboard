@@ -76,3 +76,4 @@ networks:
   cloudops-network:
     driver: bridge
 # # Health checks ensure containers start in correct order
+# # cloudops-network isolates containers from host network
