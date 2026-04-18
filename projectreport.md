@@ -413,3 +413,4 @@ git log --oneline
 # API versioning: currently v1 via path prefix /api
 # Pagination: Spring Data Page planned for large datasets
 # Caching: Spring Cache with Caffeine planned
+# CI/CD: GitHub Actions builds and deploys on every push
