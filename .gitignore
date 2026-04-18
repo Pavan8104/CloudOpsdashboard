@@ -76,3 +76,4 @@ logs/
 # yarn-error.log
 # .angular/cache/
 # .env.local
+# docker-compose.override.yml
