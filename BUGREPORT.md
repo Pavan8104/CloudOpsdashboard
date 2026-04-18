@@ -424,3 +424,4 @@ done
 # OWASP A01-A10 coverage: see projectreport.md security section
 # Pen testing: run OWASP ZAP against staging before prod
 # Dependency audit: mvn dependency-check:check for CVEs
+# Secret rotation: rotate JWT_SECRET every 90 days
