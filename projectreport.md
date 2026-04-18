@@ -409,3 +409,4 @@ git log --oneline
 # Monitoring: actuator health, Railway metrics dashboard
 # DB backup: Render auto-backups daily on free tier
 # Scaling: upgrade Railway plan for more RAM/CPU
+# Runbook: check Railway logs -> check DB -> redeploy
