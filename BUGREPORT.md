@@ -1,27 +1,36 @@
-# CloudOps Dashboard — Official Bug Report
+# CloudOps Dashboard — Complete Bug Report
 
 **Project:** CloudOps Dashboard  
 **Report Date:** 2026-04-18  
 **Reporter:** Pavan Sharma  
-**Environment:** macOS 25.3.0 · Docker 29.4.0 · Java 17 · Angular 17 · Spring Boot 3  
-**Total Bugs Found:** 9  
-**Status:** All Resolved ✅
+**Researched on:** ChatGPT, Gemini, Stack Overflow, Spring Security Docs, OWASP  
+**Total Bugs Found:** 18  
+**Critical:** 6 | High: 5 | Medium: 4 | Low: 3
 
 ---
 
-## Bug Index
+## Quick List — All 18 Bugs At a Glance
 
-| # | Bug Title | Severity | Component | Status |
-|---|---|---|---|---|
-| BUG-001 | Malformed `pom.xml` — orphan `<plugin>` block outside `<build>` | 🔴 Critical | Backend/Build | Fixed |
-| BUG-002 | Lombok `annotationProcessorPath` missing `<version>` tag | 🔴 Critical | Backend/Build | Fixed |
-| BUG-003 | `docker-compose.yml` references Docker Hub images with no local build context | 🔴 Critical | DevOps | Fixed |
-| BUG-004 | Frontend `nginx.conf` uses `${BACKEND_URL}` but variable never set in Compose | 🔴 Critical | DevOps | Fixed |
-| BUG-005 | Login page demo hint shows wrong password (`password` instead of `admin123`) | 🟠 High | Frontend/UX | Fixed |
-| BUG-006 | Docker daemon not running — all Docker commands fail silently | 🟠 High | Environment | Fixed |
-| BUG-007 | `SecurityConfig` compile error — `frameOptions()` called on wrong object due to lambda chain | 🔴 Critical | Backend/Security | Fixed |
-| BUG-008 | BCrypt cost factor too low (10) — insufficient brute-force resistance | 🟡 Medium | Backend/Security | Fixed |
-| BUG-009 | H2 console publicly accessible in production security config | 🟡 Medium | Backend/Security | Fixed |
+| # | Bug | Severity | Status |
+|---|---|---|---|
+| BUG-001 | `pom.xml` — orphan `<plugin>` block breaks Maven parse | 🔴 Critical | ✅ Fixed |
+| BUG-002 | Lombok `annotationProcessorPath` has no `<version>` | 🔴 Critical | ✅ Fixed |
+| BUG-003 | `docker-compose.yml` pulls remote images — local code never built | 🔴 Critical | ✅ Fixed |
+| BUG-004 | `${BACKEND_URL}` in nginx template never injected — all API calls 502 | 🔴 Critical | ✅ Fixed |
+| BUG-005 | Login hint shows wrong password (`password` vs `admin123`) | 🟠 High | ✅ Fixed |
+| BUG-006 | Docker Desktop not running — cryptic socket error | 🟠 High | ✅ Fixed |
+| BUG-007 | `SecurityConfig` compile error — `frameOptions()` on wrong lambda object | 🔴 Critical | ✅ Fixed |
+| BUG-008 | BCrypt cost factor 10 — too weak for production | 🟡 Medium | ✅ Fixed |
+| BUG-009 | H2 console `permitAll()` still in production security config | 🟡 Medium | ✅ Fixed |
+| BUG-010 | **Real DB credentials hardcoded in `render.yaml`** | 🔴 Critical | ⚠️ Open |
+| BUG-011 | **`SHOW_SQL=true` default leaks SQL queries into logs** | 🟠 High | ⚠️ Open |
+| BUG-012 | **`SQL_INIT_MODE=always` re-runs seed data on every restart** | 🔴 Critical | ⚠️ Open |
+| BUG-013 | **`CORS_ORIGINS=*` in `.env` — any website can call your API** | 🟠 High | ⚠️ Open |
+| BUG-014 | **PostgreSQL port 5432 exposed to host — DB accessible without auth** | 🟠 High | ⚠️ Open |
+| BUG-015 | **`prometheus` metrics endpoint publicly exposed** | 🟡 Medium | ⚠️ Open |
+| BUG-016 | **No rate limiting on login endpoint — brute-force possible** | 🟡 Medium | ⚠️ Open |
+| BUG-017 | **Hindi comments remain in `data.sql` — unprofessional, inconsistent** | 🔵 Low | ⚠️ Open |
+| BUG-018 | **JWT fallback secret in `application.properties` is predictable** | 🔵 Low | ⚠️ Open |
 
 ---
 
@@ -29,396 +38,386 @@
 
 ---
 
-### BUG-001 — Malformed `pom.xml`: Orphan `<plugin>` Block Outside `<build>`
+### BUG-001 — Malformed `pom.xml`: Orphan `<plugin>` Outside `<build>`
 
-**Severity:** 🔴 Critical  
-**Component:** `backend/pom.xml`  
-**Discovered:** During first Docker build attempt
+**Severity:** 🔴 Critical | **File:** `backend/pom.xml` line 192 | **Status:** ✅ Fixed
 
-#### Description
-A duplicate `<plugin>` block for `maven-compiler-plugin` was left dangling at line 192, outside the closing `</build>` tag. Maven's XML parser rejected the file entirely — the entire backend build failed before a single line of Java was compiled.
+**What happened:**  
+A duplicate `<plugin>` block for `maven-compiler-plugin` was pasted **after** the closing `</build>` tag. Maven's XML parser rejected the file entirely. The backend would not build at all — not even a single Java class was compiled.
 
-#### Error Message
+**Error you saw:**
 ```
 [ERROR] Malformed POM /app/pom.xml: Unrecognised tag: 'plugin'
 (position: START_TAG seen ...</build>\n    <plugin>... @192:13)
 ```
 
-#### Root Cause
-A developer attempted to add a Lombok version to the compiler plugin annotation processor paths. Instead of editing the existing `<plugin>` block inside `<build>`, they pasted a second incomplete block **after** `</build>`, creating invalid XML structure.
+**Root cause:** Copy-paste error. Developer tried to add Lombok version, pasted an entire second `<plugin>` block in the wrong place.
 
-#### Reproduction Steps
-```bash
-cd "Cloud OPS dashboard"
-docker compose build
-# → Fails immediately with Maven XML parse error
-```
-
-#### Fix Applied
-Removed the orphan `<plugin>` block at lines 192–206. The fix was surgical — only the misplaced duplicate was deleted; the correct block inside `<build>` was preserved.
-
-```xml
-<!-- BEFORE (broken) -->
-    </build>
-    <plugin>                          ← orphan, invalid here
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        ...
-    </plugin>
-
-<!-- AFTER (fixed) -->
-    </build>
-    <!-- profiles section continues normally -->
-```
-
-**File Changed:** `backend/pom.xml`
+**Fix:** Deleted the orphan block at lines 192–206. Only the misplaced duplicate was removed.
 
 ---
 
 ### BUG-002 — Lombok `annotationProcessorPath` Missing `<version>`
 
-**Severity:** 🔴 Critical  
-**Component:** `backend/pom.xml` — Maven compiler plugin config  
-**Discovered:** After fixing BUG-001, during second Docker build
+**Severity:** 🔴 Critical | **File:** `backend/pom.xml` | **Status:** ✅ Fixed
 
-#### Description
-Even after fixing the malformed XML, the backend build failed again. The `maven-compiler-plugin` annotation processor path for Lombok did not have a `<version>` tag. Maven's BOM (Bill of Materials) automatically manages versions for regular `<dependency>` entries, but **does not apply to `<annotationProcessorPaths>`** — a subtle but critical distinction.
+**What happened:**  
+After BUG-001 was fixed, build failed again. The Lombok entry inside `<annotationProcessorPaths>` had no `<version>`. Spring Boot's BOM manages versions for `<dependencies>` — but **BOM does NOT apply inside `<annotationProcessorPaths>`**. This is a well-known Maven gotcha.
 
-#### Error Message
+**Error you saw:**
 ```
-[ERROR] Failed to execute goal maven-compiler-plugin:3.11.0:compile:
 Resolution of annotationProcessorPath dependencies failed:
 version can neither be null, empty nor blank
 ```
 
-#### Root Cause
-Spring Boot's parent BOM manages the Lombok version for `<dependencies>`, but `<annotationProcessorPaths>` is processed differently by Maven and requires an explicit version. The developer incorrectly assumed BOM inheritance would apply.
-
-#### Fix Applied
-Added `<version>1.18.30</version>` explicitly to the Lombok annotation processor path:
-
-```xml
-<!-- BEFORE -->
-<annotationProcessorPaths>
-    <path>
-        <groupId>org.projectlombok</groupId>
-        <artifactId>lombok</artifactId>
-        <!-- no version → build fails -->
-    </path>
-</annotationProcessorPaths>
-
-<!-- AFTER -->
-<annotationProcessorPaths>
-    <path>
-        <groupId>org.projectlombok</groupId>
-        <artifactId>lombok</artifactId>
-        <version>1.18.30</version>   ← explicit version required
-    </path>
-</annotationProcessorPaths>
-```
-
-**File Changed:** `backend/pom.xml`
+**Fix:** Added `<version>1.18.30</version>` explicitly to the Lombok processor path.
 
 ---
 
-### BUG-003 — `docker-compose.yml` References Remote Images With No Build Context
+### BUG-003 — `docker-compose.yml` Pulls Remote Images — Local Code Ignored
 
-**Severity:** 🔴 Critical  
-**Component:** `docker-compose.yml`  
-**Discovered:** When attempting local deployment
+**Severity:** 🔴 Critical | **File:** `docker-compose.yml` | **Status:** ✅ Fixed
 
-#### Description
-The `docker-compose.yml` file specified `image: ps8104/cloudops-backend:latest` and `image: ps8104/cloudops-frontend:latest` (Docker Hub images) but contained no `build:` directive. This means:
-- Running `docker compose up` would attempt to pull from Docker Hub
-- The pulled images may be outdated or not exist
-- Local code changes would **never be reflected** — you could change 1000 lines of code and the container would still run the old version
+**What happened:**  
+`docker-compose.yml` had `image: ps8104/cloudops-backend:latest` with **no `build:` section**. Running `docker compose up` downloaded old images from Docker Hub. Every local code change was silently ignored — you could edit 1000 lines and the container ran the old version.
 
-#### Root Cause
-The compose file was written for production (using pre-built Hub images) but was being used for local development where images must be built from source.
-
-#### Fix Applied
-Added `build:` context to both services:
-
-```yaml
-# BEFORE
-backend:
-  image: ps8104/cloudops-backend:latest   ← just pulls, never builds
-
-# AFTER
-backend:
-  build:
-    context: .
-    dockerfile: Dockerfile
-  image: cloudops-backend:local           ← builds from your code
-
-frontend:
-  build:
-    context: ./frontend
-    dockerfile: Dockerfile
-  image: cloudops-frontend:local
-```
-
-Also added `BACKEND_URL` environment variable to the frontend service (see BUG-004).
-
-**File Changed:** `docker-compose.yml`
+**Fix:** Added `build: context:` for both backend and frontend services so Docker builds from local source.
 
 ---
 
-### BUG-004 — nginx Template Uses `${BACKEND_URL}` But Variable Never Injected
+### BUG-004 — `${BACKEND_URL}` in nginx Template Never Injected
 
-**Severity:** 🔴 Critical  
-**Component:** `frontend/nginx.conf` + `docker-compose.yml`  
-**Discovered:** When testing API proxy through frontend
+**Severity:** 🔴 Critical | **File:** `docker-compose.yml` + `frontend/nginx.conf` | **Status:** ✅ Fixed
 
-#### Description
-The nginx configuration uses `${BACKEND_URL}` as a template variable for the API proxy:
-```nginx
-location /api/ {
-    proxy_pass ${BACKEND_URL}/api/;   ← requires env var
-```
-nginx's official Docker image uses `envsubst` to substitute these at container startup. However, `BACKEND_URL` was never set in `docker-compose.yml` for the frontend service. The result: nginx would start with a **literal `${BACKEND_URL}`** as the proxy address, making every API call fail with a connection error.
+**What happened:**  
+`nginx.conf` uses `proxy_pass ${BACKEND_URL}/api/` — nginx's Docker image processes this as an environment variable template. But `BACKEND_URL` was never set in the `frontend:` service's environment in Compose. Result: nginx started successfully but every `/api/` call failed with a bad gateway.
 
-#### Root Cause
-Environment variable defined in template but omitted from Compose environment section. Silent failure — nginx starts successfully, but all `/api/` requests fail.
-
-#### Fix Applied
-Added the missing environment variable to the frontend service in `docker-compose.yml`:
-
-```yaml
-frontend:
-  environment:
-    BACKEND_URL: http://backend:8080   ← Docker service name as hostname
-```
-
-**Files Changed:** `docker-compose.yml`
+**Fix:** Added `BACKEND_URL: http://backend:8080` to the frontend service environment in `docker-compose.yml`.
 
 ---
 
 ### BUG-005 — Login Page Shows Wrong Demo Password
 
-**Severity:** 🟠 High  
-**Component:** `frontend/src/app/features/login/login.component.html`  
-**Discovered:** During browser login testing
+**Severity:** 🟠 High | **File:** `login.component.html` line 104 | **Status:** ✅ Fixed
 
-#### Description
-The login page displayed a "demo credentials" hint to help users get started:
-```
-Demo: admin / password | engineer1 / password | viewer1 / password
-```
-However, the actual passwords seeded in the database (via `data.sql`) were **`admin123`**, not `password`. Every user who read the hint and tried to log in would receive a 401 Unauthorized error with no explanation. This is also what the user experienced when reporting the original bug.
+**What happened:**  
+The demo hint on the login page showed `admin / password`. The actual seeded password was `admin123`. Every new user who read the hint got a 401 error with no explanation.
 
-#### Root Cause
-The hint text was written with placeholder passwords (`password`) that were never updated when the actual seed data was finalized with `admin123`.
-
-#### Backend Confirmation
+**Proof:**
 ```bash
 curl -X POST http://localhost:8080/api/auth/login \
-  -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"password"}'
 # → 401 Unauthorized
 
 curl -X POST http://localhost:8080/api/auth/login \
-  -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"admin123"}'
-# → 200 OK with JWT token
+# → 200 OK ✓
 ```
 
-#### Fix Applied
-```html
-<!-- BEFORE -->
-<span>Demo: admin / password | engineer1 / password | viewer1 / password</span>
-
-<!-- AFTER -->
-<span>Demo: admin / admin123 | engineer1 / admin123 | viewer1 / admin123</span>
-```
-
-**File Changed:** `frontend/src/app/features/login/login.component.html`
+**Fix:** Updated hint text from `password` → `admin123`.
 
 ---
 
-### BUG-006 — Docker Daemon Not Running — Silent Failure
+### BUG-006 — Docker Desktop Not Running
 
-**Severity:** 🟠 High  
-**Component:** Environment / Docker Desktop  
-**Discovered:** On first attempt to run any Docker command
+**Severity:** 🟠 High | **File:** Environment | **Status:** ✅ Fixed
 
-#### Description
-All Docker commands failed with a connection error because Docker Desktop was not running. The error message is cryptic and gives no guidance to beginners:
+**What happened:**  
+All Docker commands failed with a socket error. Misleading error — says "is the daemon running?" but gives no instructions.
 
-#### Error Message
+**Error you saw:**
 ```
 Cannot connect to the Docker daemon at unix:///Users/pavan/.docker/run/docker.sock.
 Is the docker daemon running?
 ```
 
-#### Root Cause
-Docker Desktop must be running as a background application before any `docker` CLI commands work. It does not auto-start on macOS by default.
-
-#### Fix Applied
-```bash
-open -a Docker   # Starts Docker Desktop
-# Wait ~10 seconds for daemon to be ready
-docker info      # Verify it's running
-```
-
-**No code change required** — environment fix only.
+**Fix:** `open -a Docker` to start Docker Desktop, wait 10 seconds.
 
 ---
 
-### BUG-007 — `SecurityConfig` Compile Error: `frameOptions()` Called on Wrong Object
+### BUG-007 — `SecurityConfig` Compile Error: Lambda Chaining Mistake
 
-**Severity:** 🔴 Critical  
-**Component:** `backend/src/main/java/com/cloudops/dashboard/config/SecurityConfig.java`  
-**Discovered:** During security hardening, on Docker build
+**Severity:** 🔴 Critical | **File:** `SecurityConfig.java` line 76 | **Status:** ✅ Fixed
 
-#### Description
-When adding security headers to Spring Security's `SecurityFilterChain`, the fluent API chaining was incorrect. The `.frameOptions()` method was called on the `PermissionsPolicyConfig` object (the return value of `.permissionsPolicy()`), rather than on the parent `HeadersConfigurer`.
+**What happened:**  
+When adding security headers, `.frameOptions()` was chained off `.permissionsPolicy()`. In Spring Security 6, `permissionsPolicy()` returns a `PermissionsPolicyConfig` object — not the parent `HeadersConfigurer`. So `.frameOptions()` doesn't exist on it.
 
-In Spring Security 6.x, each sub-configurer (like `permissionsPolicy()`) returns its own specialized config object, not the parent. You cannot chain unrelated configurers from it.
-
-#### Error Message
+**Error you saw:**
 ```
-[ERROR] SecurityConfig.java:[76,17] cannot find symbol
-  symbol:   method frameOptions((fo)->fo.sameOrigin())
-  location: class HeadersConfigurer.PermissionsPolicyConfig
+cannot find symbol: method frameOptions() 
+location: class HeadersConfigurer.PermissionsPolicyConfig
 ```
 
-#### Root Cause
-Incorrect lambda chaining in the fluent `.headers()` builder:
+**Fix:** Changed from method-chain style to block style — each header configurer called as a separate statement on `headers`:
 ```java
-// BROKEN — chains frameOptions() off permissionsPolicy() result
-.headers(headers -> headers
-    .permissionsPolicy(pp -> pp.policy("camera=()"))
-    .frameOptions(fo -> fo.sameOrigin())   ← wrong object, won't compile
-)
-```
-
-#### Fix Applied
-Each header configurer must be called as a **separate statement** on the `headers` variable:
-```java
-// FIXED — each method called directly on HeadersConfigurer
 .headers(headers -> {
-    headers.permissionsPolicy(pp -> pp.policy("camera=(), microphone=(), geolocation=()"));
-    headers.frameOptions(fo -> fo.sameOrigin());
-    headers.httpStrictTransportSecurity(hsts -> hsts.maxAgeInSeconds(31536000).includeSubDomains(true));
-    // ... etc
+    headers.permissionsPolicy(...);
+    headers.frameOptions(...);      // now called on correct object
 })
 ```
 
-**File Changed:** `backend/src/main/java/com/cloudops/dashboard/config/SecurityConfig.java`
+---
+
+### BUG-008 — BCrypt Cost Factor Too Low (10)
+
+**Severity:** 🟡 Medium | **File:** `SecurityConfig.java` | **Status:** ✅ Fixed
+
+**What happened:**  
+`new BCryptPasswordEncoder()` uses cost factor 10 by default. On a modern GPU, this allows ~100 hash attempts per second. For admin credentials to an ops dashboard, this is insufficient.
+
+**Fix:** Changed to `new BCryptPasswordEncoder(12)` — 4× slower per attempt, same user experience.
 
 ---
 
-### BUG-008 — BCrypt Cost Factor Too Low (10) — Insufficient Security
+### BUG-009 — H2 Console `permitAll()` in Production Security Config
 
-**Severity:** 🟡 Medium  
-**Component:** `backend/src/main/java/com/cloudops/dashboard/config/SecurityConfig.java`  
-**Discovered:** During security audit
+**Severity:** 🟡 Medium | **File:** `SecurityConfig.java` | **Status:** ✅ Fixed
 
-#### Description
-The `BCryptPasswordEncoder` was initialized with the **default cost factor of 10**. While BCrypt is always slow by design, cost factor 10 can now be cracked at a rate of ~100 hashes/second on modern consumer GPUs (2024 benchmarks). For an operations dashboard with sensitive infrastructure access, this is insufficient.
+**What happened:**  
+`SecurityConfig` had `.requestMatchers("/h2-console/**").permitAll()`. If `spring.h2.console.enabled=true` was accidentally set in production, anyone could open an unauthenticated web-based SQL shell to your database.
 
-#### Impact
-An attacker who obtains the database could potentially brute-force weak passwords (`admin`, `password`, `123456`) against the BCrypt hashes within minutes using GPU-accelerated tools like Hashcat.
+**Fix:** Removed the H2 console permit from the production filter chain entirely.
 
-#### Fix Applied
-Raised cost factor from 10 (default) to 12:
+---
 
+### BUG-010 — Real Database Credentials Hardcoded in `render.yaml`
+
+**Severity:** 🔴 Critical | **File:** `render.yaml` | **Status:** ⚠️ Open
+
+**What happened:**  
+`render.yaml` contains your **live production database password** in plain text:
+```yaml
+- key: DB_PASSWORD
+  value: k6IcvlcyRz0EgTCcaXVvrtiwtEsLRCV5   ← REAL PROD PASSWORD
+- key: DB_URL
+  value: jdbc:postgresql://dpg-d7heibjeo5us73ddhbh0-a/cloudops_4lfj
+```
+
+If this file is ever pushed to a public GitHub repository, your database is immediately accessible to anyone on the internet. GitHub secret scanners and bots actively look for this pattern.
+
+**Why it's dangerous:**  
+- Anyone with the URL + username + password can connect directly with `psql` or DBeaver
+- Can read all users, incidents, credentials
+- Can drop all tables or insert fake data
+
+**Fix (do this now):**
+```yaml
+# render.yaml — reference secrets from Render's environment group instead
+- key: DB_PASSWORD
+  fromGroup: cloudops-secrets    ← store real values in Render dashboard, not here
+```
+Or use Render's **Secret Files** feature, not hardcoded values.
+
+Also: **rotate your database password immediately** if this file was ever committed to git.
+
+---
+
+### BUG-011 — `SHOW_SQL=true` Default Leaks Queries Into Logs
+
+**Severity:** 🟠 High | **File:** `application.properties` | **Status:** ⚠️ Open
+
+**What happened:**  
+```properties
+spring.jpa.show-sql=${SHOW_SQL:true}   ← defaults to TRUE
+```
+When `SHOW_SQL` is not set in the environment (e.g., on Render), this defaults to `true`. Every single SQL query — including ones containing user emails, usernames, and incident details — is printed to stdout in plain text. This ends up in your hosting provider's log storage, accessible to anyone with log access.
+
+**What leaks in the logs:**
+```sql
+select u1_0.username, u1_0.email, u1_0.password from users where u1_0.username=?
+```
+
+**Fix:**
+```properties
+spring.jpa.show-sql=${SHOW_SQL:false}   ← default to false
+```
+
+---
+
+### BUG-012 — `SQL_INIT_MODE=always` Re-runs Seed Data on Every Restart
+
+**Severity:** 🔴 Critical | **File:** `.env` + `application.properties` | **Status:** ⚠️ Open
+
+**What happened:**  
+Your `.env` file has:
+```
+SQL_INIT_MODE=always
+JPA_DDL_AUTO=update
+```
+
+`SQL_INIT_MODE=always` tells Spring Boot to run `data.sql` every single time the application starts. Combined with `JPA_DDL_AUTO=update` (which keeps existing data), this re-inserts the seed rows on every deploy. If the `INSERT` uses `ON CONFLICT DO NOTHING`, it's harmless. If it doesn't, you get **duplicate users, duplicate services, duplicate incidents** on every restart.
+
+**Also dangerous:** `JPA_DDL_AUTO=create-drop` (used in local Compose) **wipes and recreates the entire database** on every container restart — all data lost.
+
+**Fix for production `.env`:**
+```
+SQL_INIT_MODE=never        ← only run once manually, or use Flyway
+JPA_DDL_AUTO=validate      ← validate schema, never modify it
+```
+
+---
+
+### BUG-013 — `CORS_ORIGINS=*` Allows Any Website to Call Your API
+
+**Severity:** 🟠 High | **File:** `.env` | **Status:** ⚠️ Open
+
+**What happened:**  
+```
+CORS_ORIGINS=*
+```
+This means **any website on the internet** can make authenticated API calls to your backend using a logged-in user's browser session. A malicious site could silently read all your incidents and service data.
+
+**Fix:** Set to your actual frontend URL:
+```
+CORS_ORIGINS=https://cloudops-frontend.onrender.com
+```
+
+---
+
+### BUG-014 — PostgreSQL Port 5432 Exposed to Host Machine
+
+**Severity:** 🟠 High | **File:** `docker-compose.yml` | **Status:** ⚠️ Open
+
+**What happened:**  
+```yaml
+postgres:
+  ports:
+    - "5432:5432"   ← maps host port 5432 to container
+```
+This exposes your PostgreSQL database directly on your Mac's network interface. Anyone on your local network (coffee shop, office) can connect to your database without Docker authentication — just knowing your IP.
+
+**Fix for production:** Remove the `ports:` mapping for postgres entirely. Backend connects via Docker's internal network (`cloudops-network`) — external exposure is unnecessary.
+```yaml
+postgres:
+  # ports: NOT needed — backend reaches it via Docker network
+  networks:
+    - cloudops-network
+```
+
+---
+
+### BUG-015 — `prometheus` Metrics Endpoint Publicly Exposed
+
+**Severity:** 🟡 Medium | **File:** `application.properties` | **Status:** ⚠️ Open
+
+**What happened:**  
+```properties
+management.endpoints.web.exposure.include=health,info,metrics,prometheus
+```
+The `/api/actuator/prometheus` endpoint exposes detailed internal metrics: JVM heap usage, thread counts, HTTP request counts per endpoint, database connection pool stats. This gives attackers a detailed map of your system internals.
+
+**Fix:** Remove `prometheus` from public exposure, or secure it:
+```properties
+management.endpoints.web.exposure.include=health,info
+```
+If you need Prometheus, use a separate management port with authentication.
+
+---
+
+### BUG-016 — No Rate Limiting on Login Endpoint — Brute Force Possible
+
+**Severity:** 🟡 Medium | **File:** No file — missing feature | **Status:** ⚠️ Open
+
+**What happened:**  
+`/api/auth/login` has no request rate limiting. An attacker can send thousands of login attempts per second. Even with BCrypt cost=12 (~250ms per hash), the server will try every request and eventually exhaust threads.
+
+**Confirmed:** Grep found zero usage of `RateLimiter`, `Bucket4j`, or throttle in the entire codebase.
+
+**Fix:** Add Bucket4j or Spring's built-in rate limiting:
 ```java
-// BEFORE
-@Bean
-public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();        // default cost = 10
+// Add to pom.xml
+<dependency>
+    <groupId>com.bucket4j</groupId>
+    <artifactId>bucket4j-core</artifactId>
+</dependency>
+```
+Or at nginx level:
+```nginx
+limit_req_zone $binary_remote_addr zone=login:10m rate=5r/m;
+location /api/auth/login {
+    limit_req zone=login burst=3 nodelay;
 }
-
-// AFTER
-@Bean
-public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder(12);      // cost = 12 → 4x slower to crack
-}
 ```
-
-**Benchmark impact of cost=12:**
-- Each hash attempt takes ~250ms on a server
-- Legitimate logins: imperceptible delay (~250ms)
-- Brute force at 100k attempts/day: would take years for a 12-character random password
-
-**File Changed:** `backend/.../config/SecurityConfig.java`
 
 ---
 
-### BUG-009 — H2 Console Permitted in Production Security Config
+### BUG-017 — Hindi Comments Remain in `data.sql`
 
-**Severity:** 🟡 Medium  
-**Component:** `backend/src/main/java/com/cloudops/dashboard/config/SecurityConfig.java`  
-**Discovered:** During production security review
+**Severity:** 🔵 Low | **File:** `backend/src/main/resources/data.sql` | **Status:** ⚠️ Open
 
-#### Description
-The original `SecurityConfig` permitted unauthenticated access to `/h2-console/**`:
-
-```java
-.requestMatchers("/h2-console/**").permitAll()   ← dangerous in production
+**What happened:**  
+While all Java and TypeScript files were cleaned to English, `data.sql` still contains Hindi/Urdu comments:
+```sql
+-- Yeh file development aur testing ke liye initial data provide karta hai.
+-- Production mein yeh mat chalao
+-- User roles assign karo - admin ke liye sab roles
+-- Real GCP services ka simulation kar rahe hain
 ```
 
-The H2 in-memory console is a **web-based SQL shell**. If it were somehow accessible in production (e.g., if `spring.h2.console.enabled=true` was accidentally set), anyone could execute arbitrary SQL against the database — read all data, drop all tables, create admin accounts — without needing to log in.
-
-#### Root Cause
-The H2 console permission was copied from a development configuration template without being restricted to development-only builds. The `application.properties` does disable H2 in production (when `DB_URL` is overridden to PostgreSQL), but the security permit was still present as a latent risk.
-
-#### Fix Applied
-Removed the blanket `/h2-console/**` permit from the production `SecurityFilterChain`. H2 console access is now governed entirely by `spring.h2.console.enabled` in `application.properties`, which defaults to `false` whenever a real database URL is provided.
-
-```java
-// REMOVED from SecurityConfig
-.requestMatchers("/h2-console/**").permitAll()
-```
-
-**File Changed:** `backend/.../config/SecurityConfig.java`
+**Fix:** Replace with English equivalents — minor but important for consistency and professionalism.
 
 ---
 
-## Summary Table
+### BUG-018 — JWT Fallback Secret in `application.properties` Is Predictable
 
-| # | File | Line(s) | Type | Impact |
-|---|---|---|---|---|
-| BUG-001 | `backend/pom.xml` | 192–206 | Build Failure | App won't build at all |
-| BUG-002 | `backend/pom.xml` | 182–187 | Build Failure | App won't compile at all |
-| BUG-003 | `docker-compose.yml` | 39–41, 80–82 | Config Error | Local code changes ignored |
-| BUG-004 | `docker-compose.yml` | frontend env | Config Error | All API calls fail (502) |
-| BUG-005 | `login.component.html` | 104 | UX / Logic | Nobody can log in |
-| BUG-006 | Environment | — | Environment | No Docker commands work |
-| BUG-007 | `SecurityConfig.java` | 76 | Compile Error | Build fails after security changes |
-| BUG-008 | `SecurityConfig.java` | passwordEncoder() | Security Weakness | Password hashing too fast to crack |
-| BUG-009 | `SecurityConfig.java` | permitAll block | Security Risk | H2 console unguarded |
+**Severity:** 🔵 Low | **File:** `application.properties` | **Status:** ⚠️ Open
+
+**What happened:**  
+```properties
+jwt.secret=${JWT_SECRET:CloudOpsSecretKeyForJWTTokenGeneration2024VeryLongAndSecure}
+```
+If `JWT_SECRET` environment variable is not set, Spring falls back to this hardcoded string. This fallback is now public — it's in the git history. Anyone who knows it can forge valid JWT tokens and impersonate any user, including admins.
+
+**Fix:** Remove the fallback entirely — force an error if the secret is missing:
+```properties
+jwt.secret=${JWT_SECRET}   ← no fallback — app fails fast if secret missing
+```
+This is safer than silently using a known-compromised default.
 
 ---
 
-## How to Verify All Fixes
+## Priority Fix Order
+
+If you have 30 minutes, fix in this order:
+
+```
+1. BUG-010 → Remove DB password from render.yaml, rotate credentials
+2. BUG-013 → Set CORS_ORIGINS to your actual domain
+3. BUG-012 → Change SQL_INIT_MODE=never, JPA_DDL_AUTO=validate in .env
+4. BUG-011 → Change SHOW_SQL default to false
+5. BUG-014 → Remove postgres ports: from docker-compose.yml
+6. BUG-018 → Remove JWT fallback secret
+7. BUG-016 → Add nginx rate limiting to /api/auth/login
+8. BUG-015 → Remove prometheus from actuator exposure
+9. BUG-017 → Clean Hindi from data.sql
+```
+
+---
+
+## Verification Commands
 
 ```bash
-# 1. Build succeeds (BUG-001, BUG-002, BUG-007)
-cd "Cloud OPS dashboard"
-docker compose build
-# → Should complete with BUILD SUCCESS for both images
+# BUG-010: check render.yaml has no hardcoded secrets
+grep -i "password\|secret" render.yaml
 
-# 2. Containers start (BUG-003, BUG-004, BUG-006)
-docker compose up -d
-docker compose ps
-# → All 3 containers: cloudops-postgres, cloudops-backend, cloudops-frontend
+# BUG-011: confirm SHOW_SQL is false
+grep "SHOW_SQL" backend/src/main/resources/application.properties
 
-# 3. Login works (BUG-005)
-curl -X POST http://localhost:8080/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}'
-# → 200 OK with accessToken
+# BUG-013: confirm CORS is not wildcard
+grep "CORS_ORIGINS" .env
 
-# 4. Security headers present (BUG-007, BUG-008, BUG-009)
-curl -I http://localhost:80
-# → X-Frame-Options: DENY
-# → X-Content-Type-Options: nosniff
-# → Content-Security-Policy: default-src 'self' ...
+# BUG-014: confirm postgres port not exposed
+grep -A3 "postgres:" docker-compose.yml | grep "ports"
+
+# BUG-016: test rate limiting (should block after 5 attempts)
+for i in {1..10}; do
+  curl -s -o /dev/null -w "%{http_code}\n" \
+    -X POST http://localhost:8080/api/auth/login \
+    -H "Content-Type: application/json" \
+    -d '{"username":"admin","password":"wrong"}'
+done
 ```
 
 ---
 
-*Bug report generated: 2026-04-18 | All 9 bugs resolved | CloudOps Dashboard v1.0*
+*CloudOps Dashboard Bug Report v2 — 2026-04-18 — 18 bugs total (9 fixed, 9 open)*
