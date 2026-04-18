@@ -428,3 +428,4 @@ done
 # DB credential rotation: update DB_PASSWORD quarterly
 # SSL: Railway auto-provisions Let's Encrypt certificates
 # Headers: verify via securityheaders.com after deploy
+# CSP: test with Content-Security-Policy-Report-Only first
