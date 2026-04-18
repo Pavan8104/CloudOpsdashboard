@@ -405,3 +405,4 @@ git log --oneline
 *CloudOps Dashboard — Built for production, documented for everyone.*
 
 # JWT chosen over sessions for horizontal scalability
+# Deployment checklist: env vars, DB migration, health check
