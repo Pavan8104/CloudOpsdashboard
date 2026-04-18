@@ -8,8 +8,6 @@ services:
       POSTGRES_DB: cloudopsdb
       POSTGRES_USER: cloudops
       POSTGRES_PASSWORD: cloudops123
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
