@@ -72,3 +72,4 @@ logs/
 # *.iml
 # .DS_Store
 # target/
+# npm-debug.log*
