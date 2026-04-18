@@ -1,37 +1,29 @@
-// CloudOps Dashboard - Global Styles
-// Yahan sab kuch hai jo poori app pe apply hota hai.
-// Component-specific styles unke apne .scss files mein hain.
-// Angular Material ka theme already angular.json mein include hai.
+// CloudOps Dashboard — Global Styles
 
-// === GOOGLE CLOUD INSPIRED COLOR PALETTE ===
-// GCP ke branding colors use kar rahe hain - familiar feel ke liye
 :root {
-  --gcp-blue: #4285f4;        // Google blue - primary actions
-  --gcp-red: #ea4335;         // Google red - errors, critical alerts
-  --gcp-yellow: #fbbc04;      // Google yellow - warnings
-  --gcp-green: #34a853;       // Google green - success, healthy status
-  --gcp-dark: #202124;        // Dark background - sidebar
-  --gcp-surface: #f8f9fa;     // Light background
-  --gcp-border: #dadce0;      // Subtle borders
+  --primary: #1a73e8;
+  --primary-dark: #0d47a1;
+  --gcp-blue: #4285f4;
+  --gcp-red: #ea4335;
+  --gcp-yellow: #fbbc04;
+  --gcp-green: #34a853;
+  --gcp-dark: #202124;
+  --gcp-surface: #f8f9fa;
+  --gcp-border: #dadce0;
 
-  // Status colors - dashboard badges ke liye
   --status-up: #34a853;
   --status-down: #ea4335;
   --status-degraded: #fbbc04;
   --status-maintenance: #4285f4;
   --status-unknown: #9aa0a6;
 
-  // Severity colors - incident badges ke liye
   --sev1: #ea4335;
   --sev2: #ff6d00;
   --sev3: #fbbc04;
   --sev4: #4285f4;
 }
 
-// === BASE STYLES ===
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 html, body {
   height: 100%;
@@ -40,38 +32,21 @@ html, body {
 }
 
 body {
-  font-family: Roboto, "Helvetica Neue", sans-serif;
+  font-family: 'Google Sans', Roboto, 'Helvetica Neue', sans-serif;
   font-size: 14px;
   background-color: var(--gcp-surface);
   color: #3c4043;
-  // Scrollbar thodi subtle banao
   scrollbar-width: thin;
   scrollbar-color: #bdc1c6 transparent;
 }
 
-// === CUSTOM SCROLLBAR ===
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background-color: #bdc1c6; border-radius: 3px; }
 
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+h1, h2, h3, h4, h5, h6 { margin: 0; font-weight: 500; }
 
-::-webkit-scrollbar-thumb {
-  background-color: #bdc1c6;
-  border-radius: 3px;
-}
-
-// === TYPOGRAPHY HELPERS ===
-h1, h2, h3, h4, h5, h6 {
-  margin: 0;
-  font-weight: 500;
-}
-
-// === STATUS BADGE STYLES ===
-// Yeh classes poori app mein use hote hain - service status, incident badges
+// === STATUS BADGES ===
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -83,32 +58,6 @@ h1, h2, h3, h4, h5, h6 {
   text-transform: uppercase;
   letter-spacing: 0.5px;
 
-  &.status-up {
-    background-color: #e6f4ea;
-    color: #1e8e3e;
-  }
-
-  &.status-down {
-    background-color: #fce8e6;
-    color: #c5221f;
-  }
-
-  &.status-degraded {
-    background-color: #fef7e0;
-    color: #b06000;
-  }
-
-  &.status-maintenance {
-    background-color: #e8f0fe;
-    color: #1967d2;
-  }
-
-  &.status-unknown {
-    background-color: #f1f3f4;
-    color: #5f6368;
-  }
-
-  // Status dot indicator - colored circle
   &::before {
     content: '';
     display: inline-block;
@@ -117,6 +66,12 @@ h1, h2, h3, h4, h5, h6 {
     border-radius: 50%;
     background-color: currentColor;
   }
+
+  &.status-up    { background: #e6f4ea; color: #1e8e3e; }
+  &.status-down  { background: #fce8e6; color: #c5221f; }
+  &.status-degraded    { background: #fef7e0; color: #b06000; }
+  &.status-maintenance { background: #e8f0fe; color: #1967d2; }
+  &.status-unknown     { background: #f1f3f4; color: #5f6368; }
 }
 
 // === SEVERITY BADGES ===
@@ -135,19 +90,18 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 // === CARD STYLES ===
-// Angular Material mat-card override - thoda custom look
 .dashboard-card {
-  border-radius: 8px !important;
+  border-radius: 12px !important;
   border: 1px solid var(--gcp-border) !important;
-  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15) !important;
+  box-shadow: 0 1px 3px rgba(60,64,67,.15), 0 1px 2px rgba(60,64,67,.1) !important;
   transition: box-shadow 0.2s ease;
 
   &:hover {
-    box-shadow: 0 1px 3px 0 rgba(60, 64, 67, 0.3), 0 4px 8px 3px rgba(60, 64, 67, 0.15) !important;
+    box-shadow: 0 2px 8px rgba(60,64,67,.2), 0 4px 12px rgba(60,64,67,.12) !important;
   }
 }
 
-// === LOADING STATE ===
+// === LOADING ===
 .loading-container {
   display: flex;
   justify-content: center;
@@ -173,67 +127,52 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
-// === RESPONSIVE GRID ===
+// === GRIDS ===
 .grid-2 {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
+  @media (max-width: 768px) { grid-template-columns: 1fr; }
 }
 
 .grid-3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
-
-  @media (max-width: 1024px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
+  @media (max-width: 1024px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 768px)  { grid-template-columns: 1fr; }
 }
 
 .grid-4 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
-
-  @media (max-width: 1200px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
-  }
+  @media (max-width: 1200px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 600px)  { grid-template-columns: 1fr; }
 }
 
-// === UTILITY CLASSES ===
+// === UTILITIES ===
 .text-success { color: var(--gcp-green); }
-.text-danger { color: var(--gcp-red); }
+.text-danger  { color: var(--gcp-red); }
 .text-warning { color: var(--gcp-yellow); }
-.text-info { color: var(--gcp-blue); }
-.text-muted { color: #5f6368; }
+.text-info    { color: var(--gcp-blue); }
+.text-muted   { color: #5f6368; }
 
 .mt-16 { margin-top: 16px; }
 .mb-16 { margin-bottom: 16px; }
-.p-16 { padding: 16px; }
+.p-16  { padding: 16px; }
 
-// Truncate long text - table mein useful hai
 .text-truncate {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-// === CHART CONTAINER ===
-// ng2-charts ka default container yahan style karo
 .chart-container {
   position: relative;
   height: 250px;
   width: 100%;
 }
+
+// === SPACER ===
+.spacer { flex: 1 1 auto; }
