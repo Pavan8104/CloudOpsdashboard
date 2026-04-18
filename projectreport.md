@@ -407,3 +407,4 @@ git log --oneline
 # JWT chosen over sessions for horizontal scalability
 # Deployment checklist: env vars, DB migration, health check
 # Monitoring: actuator health, Railway metrics dashboard
+# DB backup: Render auto-backups daily on free tier
