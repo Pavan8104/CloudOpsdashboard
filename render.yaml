@@ -36,7 +36,7 @@ services:
       - key: JPA_DDL_AUTO
         value: update
       - key: SQL_INIT_MODE
-        value: always
+        value: never
       - key: SHOW_SQL
         value: "false"
       - key: CORS_ORIGINS

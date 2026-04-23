@@ -45,9 +45,9 @@ public class IncidentService {
     /**
      * Naya incident create karo - SEV1 incidents ke liye extra logging.
      */
-    public IncidentDTO createIncident(IncidentDTO dto, Long createdByUserId) {
-        User creator = userRepository.findById(createdByUserId)
-            .orElseThrow(() -> new ResourceNotFoundException("User", "id", createdByUserId));
+    public IncidentDTO createIncident(IncidentDTO dto, String createdByUsername) {
+        User creator = userRepository.findByUsernameOrEmail(createdByUsername, createdByUsername)
+            .orElseThrow(() -> new ResourceNotFoundException("User", "username", createdByUsername));
 
         Incident incident = new Incident();
         incident.setTitle(dto.getTitle());

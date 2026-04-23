@@ -52,7 +52,7 @@ public class IncidentController {
             @Valid @RequestBody IncidentDTO dto,
             Authentication authentication) {
         log.info("Incident creation requested by: {}", authentication.getName());
-        IncidentDTO created = incidentService.createIncident(dto, 1L);
+        IncidentDTO created = incidentService.createIncident(dto, authentication.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 

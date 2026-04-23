@@ -1,13 +1,12 @@
 -- CloudOps Dashboard - Seed Data
--- Yeh file development aur testing ke liye initial data provide karta hai.
--- Spring Boot automatically yeh run karta hai jab application start hoti hai (H2 ke saath).
--- Production mein yeh mat chalao - proper migration tool use karo (Flyway/Liquibase).
+-- This file provides initial data for development and testing.
+-- Spring Boot runs this automatically on startup (with H2).
+-- Do not run this in production - use a proper migration tool like Flyway/Liquibase.
 
 -- =====================================================
 -- DEFAULT ADMIN USER
 -- Password: admin123 (BCrypt encoded)
--- IMPORTANT: Production mein yeh change karo turant!
--- BCrypt hash of "admin123"
+-- IMPORTANT: Change this immediately in production!
 -- =====================================================
 INSERT INTO users (username, email, password, full_name, enabled, created_at, updated_at)
 VALUES (
@@ -20,7 +19,7 @@ VALUES (
     CURRENT_TIMESTAMP
 ) ON CONFLICT DO NOTHING;
 
--- Engineer user - demo ke liye
+-- Engineer user for demo purposes
 INSERT INTO users (username, email, password, full_name, enabled, created_at, updated_at)
 VALUES (
     'engineer1',
@@ -32,7 +31,7 @@ VALUES (
     CURRENT_TIMESTAMP
 ) ON CONFLICT DO NOTHING;
 
--- Viewer user - read-only access demo ke liye
+-- Viewer user for read-only access demo
 INSERT INTO users (username, email, password, full_name, enabled, created_at, updated_at)
 VALUES (
     'viewer1',
@@ -44,7 +43,7 @@ VALUES (
     CURRENT_TIMESTAMP
 ) ON CONFLICT DO NOTHING;
 
--- User roles assign karo - admin ke liye sab roles, engineer ke liye sirf engineer
+-- Assign user roles - Admin gets all roles, Engineer gets Engineer role
 INSERT INTO user_roles (user_id, role)
 SELECT id, 'ROLE_ADMIN' FROM users WHERE username = 'admin' ON CONFLICT DO NOTHING;
 INSERT INTO user_roles (user_id, role)
@@ -53,8 +52,8 @@ INSERT INTO user_roles (user_id, role)
 SELECT id, 'ROLE_VIEWER' FROM users WHERE username = 'viewer1' ON CONFLICT DO NOTHING;
 
 -- =====================================================
--- SAMPLE GCP SERVICES - Dashboard mein dikhne ke liye
--- Real GCP services ka simulation kar rahe hain
+-- SAMPLE SERVICES - For dashboard visualization
+-- Simulating real cloud services
 -- =====================================================
 
 INSERT INTO service_health (service_name, service_type, status, region, gcp_project_id, response_time_ms, uptime_percentage, status_message, last_checked_at, created_at, updated_at)
@@ -69,7 +68,7 @@ VALUES
     ('BigQuery Analytics', 'Analytics', 'UP', 'us-central1', 'cloudops-prod', 145, 99.7, 'Query processing normal', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- =====================================================
--- SAMPLE INCIDENTS - Incident history demo ke liye
+-- SAMPLE INCIDENTS - For incident history demo
 -- =====================================================
 
 INSERT INTO incidents (title, description, severity, status, incident_number, started_at, created_at, updated_at)

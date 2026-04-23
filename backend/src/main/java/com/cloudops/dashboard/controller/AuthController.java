@@ -21,9 +21,19 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
+    private final com.cloudops.dashboard.service.RateLimitingService rateLimitingService;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<LoginResponse> login(
+            @Valid @RequestBody LoginRequest loginRequest,
+            jakarta.servlet.http.HttpServletRequest request) {
+        
+        String ip = request.getRemoteAddr();
+        if (!rateLimitingService.resolveBucket(ip).tryConsume(1)) {
+            log.warn("Rate limit exceeded for IP: {} attempting to login as: {}", ip, loginRequest.getUsername());
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+        }
+
         log.info("Login request received for: {}", loginRequest.getUsername());
         LoginResponse response = authService.login(loginRequest);
         return ResponseEntity.ok(response);
