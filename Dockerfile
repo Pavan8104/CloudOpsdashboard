@@ -1,7 +1,7 @@
 # =======================
 # STAGE 1: BUILD
 # =======================
-FROM maven:3.9.9-eclipse-temurin-17 AS builder
+FROM maven:3.9.9-eclipse-temurin-21 AS builder
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ RUN mvn clean package -DskipTests
 # =======================
 # STAGE 2: RUNTIME (Red Hat Hardened)
 # =======================
-FROM registry.access.redhat.com/ubi8/openjdk-17-runtime:latest AS runtime
+FROM registry.access.redhat.com/ubi8/openjdk-21-runtime:latest AS runtime
 
 # Red Hat UBI images run as user 185 (jboss) by default for safety
 USER 185
