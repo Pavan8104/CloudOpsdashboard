@@ -17,7 +17,7 @@ VALUES (
     true,
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
-) ON CONFLICT DO NOTHING;
+) ;
 
 -- Engineer user for demo purposes
 INSERT INTO users (username, email, password, full_name, enabled, created_at, updated_at)
@@ -29,7 +29,7 @@ VALUES (
     true,
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
-) ON CONFLICT DO NOTHING;
+) ;
 
 -- Viewer user for read-only access demo
 INSERT INTO users (username, email, password, full_name, enabled, created_at, updated_at)
@@ -41,15 +41,15 @@ VALUES (
     true,
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
-) ON CONFLICT DO NOTHING;
+) ;
 
 -- Assign user roles - Admin gets all roles, Engineer gets Engineer role
 INSERT INTO user_roles (user_id, role)
-SELECT id, 'ROLE_ADMIN' FROM users WHERE username = 'admin' ON CONFLICT DO NOTHING;
+SELECT id, 'ROLE_ADMIN' FROM users WHERE username = 'admin';
 INSERT INTO user_roles (user_id, role)
-SELECT id, 'ROLE_ENGINEER' FROM users WHERE username = 'engineer1' ON CONFLICT DO NOTHING;
+SELECT id, 'ROLE_ENGINEER' FROM users WHERE username = 'engineer1';
 INSERT INTO user_roles (user_id, role)
-SELECT id, 'ROLE_VIEWER' FROM users WHERE username = 'viewer1' ON CONFLICT DO NOTHING;
+SELECT id, 'ROLE_VIEWER' FROM users WHERE username = 'viewer1';
 
 -- =====================================================
 -- SAMPLE SERVICES - For dashboard visualization
@@ -99,7 +99,7 @@ VALUES
         'SEV4',
         'RESOLVED',
         'INC-20240116-0001',
-        CURRENT_TIMESTAMP - INTERVAL '5 hours',
-        CURRENT_TIMESTAMP - INTERVAL '5 hours',
-        CURRENT_TIMESTAMP - INTERVAL '2 hours'
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
     );
