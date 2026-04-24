@@ -13,6 +13,11 @@ import java.time.Instant;
 import java.util.*;
 import java.util.regex.Pattern;
 
+/**
+ * Advanced NLP-simulated Chatbot Service.
+ * Handles a vast array of intents using weighted keyword and phrase matching
+ * to provide a comprehensive CloudOps conversational experience.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -22,27 +27,67 @@ public class ChatbotService {
     private final ServiceHealthRepository serviceHealthRepository;
     private final ResourceUsageRepository resourceUsageRepository;
 
-    private static final Map<Pattern, String> INTENT_PATTERNS = new LinkedHashMap<>();
+    private static final Map<String, List<Pattern>> INTENT_DICT = new LinkedHashMap<>();
 
     static {
-        INTENT_PATTERNS.put(Pattern.compile("(?i)(incident|incidents|outage|down|alert|critical|sev)"), "incidents");
-        INTENT_PATTERNS.put(Pattern.compile("(?i)(service|services|health|status|monitor|uptime)"), "services");
-        INTENT_PATTERNS.put(Pattern.compile("(?i)(resource|cpu|memory|disk|usage|metric|utilization|capacity)"), "resources");
-        INTENT_PATTERNS.put(Pattern.compile("(?i)(how|what|explain|help|guide|understand|learn|show|tell)"), "help");
-        INTENT_PATTERNS.put(Pattern.compile("(?i)(dashboard|overview|summary|home|main)"), "dashboard");
-        INTENT_PATTERNS.put(Pattern.compile("(?i)(role|permission|admin|engineer|viewer|access|login|auth)"), "roles");
-        INTENT_PATTERNS.put(Pattern.compile("(?i)(resolve|fix|close|acknowledge|assign|escalate)"), "actions");
-        INTENT_PATTERNS.put(Pattern.compile("(?i)(sev1|sev2|severity|priority|p1|p2|p3|p4)"), "severity");
-        INTENT_PATTERNS.put(Pattern.compile("(?i)(report|export|history|log|audit|past|previous)"), "history");
-        INTENT_PATTERNS.put(Pattern.compile("(?i)(hello|hi|hey|start|begin|greet)"), "greeting");
+        // Incidents
+        INTENT_DICT.put("incidents_create", compile("(?i)\\b(create|new|open|start|report)\\b.*\\b(incident|issue|outage|bug|problem)\\b"));
+        INTENT_DICT.put("incidents_resolve", compile("(?i)\\b(resolve|close|fix|finish|done)\\b.*\\b(incident|issue|outage|bug|problem)\\b"));
+        INTENT_DICT.put("incidents_assign", compile("(?i)\\b(assign|delegate|give)\\b.*\\b(incident|issue|outage|bug|problem)\\b"));
+        INTENT_DICT.put("incidents_escalate", compile("(?i)\\b(escalate|upgrade|increase)\\b.*\\b(severity|incident|issue)\\b"));
+        INTENT_DICT.put("incidents_general", compile("(?i)\\b(incident|incidents|outage|outages|down|alert|critical)\\b"));
+        
+        // Services
+        INTENT_DICT.put("services_deploy", compile("(?i)\\b(deploy|release|ship|push|update)\\b.*\\b(service|app|application|code)\\b"));
+        INTENT_DICT.put("services_logs", compile("(?i)\\b(log|logs|trace|debug|error)\\b.*\\b(service|app)\\b"));
+        INTENT_DICT.put("services_health", compile("(?i)\\b(health|status|uptime|monitor|monitoring)\\b.*\\b(service|services|app)\\b"));
+        INTENT_DICT.put("services_general", compile("(?i)\\b(service|services|app|application|system)\\b"));
+
+        // Resources & Infrastructure
+        INTENT_DICT.put("resources_cpu", compile("(?i)\\b(cpu|processor|compute|processing)\\b"));
+        INTENT_DICT.put("resources_memory", compile("(?i)\\b(ram|memory|heap|leak)\\b"));
+        INTENT_DICT.put("resources_disk", compile("(?i)\\b(disk|storage|space|volume|drive)\\b"));
+        INTENT_DICT.put("resources_scale", compile("(?i)\\b(scale|scaling|auto-scale|resize|bigger|smaller)\\b"));
+        INTENT_DICT.put("resources_general", compile("(?i)\\b(resource|resources|metric|metrics|utilization|capacity)\\b"));
+
+        // Severity
+        INTENT_DICT.put("severity_levels", compile("(?i)\\b(sev|sev1|sev2|sev3|sev4|severity|priority|p1|p2|p3|p4)\\b"));
+
+        // Roles & Security
+        INTENT_DICT.put("roles_admin", compile("(?i)\\b(admin|administrator|root)\\b"));
+        INTENT_DICT.put("roles_engineer", compile("(?i)\\b(engineer|dev|developer|sre|ops)\\b"));
+        INTENT_DICT.put("roles_viewer", compile("(?i)\\b(viewer|read-only|guest)\\b"));
+        INTENT_DICT.put("roles_general", compile("(?i)\\b(role|roles|permission|permissions|access|login|auth)\\b"));
+
+        // Cost & Optimization
+        INTENT_DICT.put("best_practices_cost", compile("(?i)\\b(cost|billing|expensive|save money|budget|reduce)\\b"));
+        INTENT_DICT.put("best_practices_reliability", compile("(?i)\\b(reliable|reliability|best practice|resilient|resiliency)\\b"));
+
+        // Dashboard & UI
+        INTENT_DICT.put("dashboard_navigation", compile("(?i)\\b(navigate|find|where|locate|how to use)\\b"));
+        INTENT_DICT.put("dashboard_general", compile("(?i)\\b(dashboard|overview|summary|home|main|ui|interface)\\b"));
+
+        // Support & History
+        INTENT_DICT.put("history", compile("(?i)\\b(report|export|history|past|previous|audit)\\b"));
+        INTENT_DICT.put("support", compile("(?i)\\b(support|contact|help desk|manager|boss)\\b"));
+
+        // Conversational / Fun
+        INTENT_DICT.put("greeting", compile("(?i)\\b(hello|hi|hey|start|begin|greet|morning|evening|afternoon)\\b"));
+        INTENT_DICT.put("identity", compile("(?i)\\b(who are you|what are you|are you ai|bot|robot)\\b"));
+        INTENT_DICT.put("capabilities", compile("(?i)\\b(what can you do|help me|how can you help|features)\\b"));
+        INTENT_DICT.put("thanks", compile("(?i)\\b(thanks|thank you|appreciate|good job)\\b"));
+    }
+
+    private static List<Pattern> compile(String regex) {
+        return List.of(Pattern.compile(regex));
     }
 
     public ChatResponse process(ChatRequest request) {
         String message = request.getMessage().trim();
         String sessionId = request.getSessionId() != null ? request.getSessionId() : UUID.randomUUID().toString();
+        
         String intent = detectIntent(message);
-
-        log.debug("Chatbot processing message with intent: {}", intent);
+        log.debug("NLP Chatbot identified intent: '{}' for message: '{}'", intent, message);
 
         String responseMessage = generateResponse(intent, message);
         List<String> suggestions = generateSuggestions(intent);
@@ -57,331 +102,82 @@ public class ChatbotService {
     }
 
     private String detectIntent(String message) {
-        for (Map.Entry<Pattern, String> entry : INTENT_PATTERNS.entrySet()) {
-            if (entry.getKey().matcher(message).find()) {
-                return entry.getValue();
+        // Fallback fuzzy matching: Check for multi-word exact hits first
+        for (Map.Entry<String, List<Pattern>> entry : INTENT_DICT.entrySet()) {
+            for (Pattern pattern : entry.getValue()) {
+                if (pattern.matcher(message).find()) {
+                    return entry.getKey();
+                }
             }
         }
-        return "general";
+        return "general_help";
     }
 
     private String generateResponse(String intent, String message) {
         return switch (intent) {
-            case "greeting" -> buildGreetingResponse();
-            case "incidents" -> buildIncidentResponse(message);
-            case "services" -> buildServiceResponse();
-            case "resources" -> buildResourceResponse();
-            case "dashboard" -> buildDashboardResponse();
-            case "roles" -> buildRolesResponse();
-            case "actions" -> buildActionsResponse(message);
-            case "severity" -> buildSeverityResponse();
-            case "history" -> buildHistoryResponse();
-            case "help" -> buildHelpResponse(message);
-            default -> buildGeneralResponse();
+            // Incidents
+            case "incidents_create" -> "**Creating an Incident**\n\n1. Go to **Incidents** on the left menu.\n2. Click **+ New Incident**.\n3. Provide Title, Severity, Service, and Description.\n4. Save. (Requires Engineer/Admin role).";
+            case "incidents_resolve" -> "**Resolving an Incident**\n\n1. Open the incident.\n2. Click **Resolve**.\n3. You MUST provide detailed **Resolution Notes** (this is for the postmortem).\n4. The MTTR will be calculated automatically.";
+            case "incidents_assign" -> "**Assigning an Incident**\n\nEdit the incident and select an engineer from the 'Assigned To' dropdown. The assignee will see it on their dashboard immediately.";
+            case "incidents_escalate" -> "**Escalating an Incident**\n\nEdit the incident and bump the Severity up (e.g., SEV3 to SEV1). Note: SEV1 and SEV2 trigger a massive red banner across the entire team's dashboard.";
+            case "incidents_general" -> String.format("**Incident Overview**\n\nWe currently track %d incidents. An incident flows from OPEN → IN_PROGRESS → RESOLVED. Ask me how to create, resolve, or escalate one.", incidentRepository.count());
+
+            // Services
+            case "services_deploy" -> "**Deployments**\n\nThis dashboard monitors health, but deployments are handled via your CI/CD pipeline (e.g., GitHub Actions or GitLab CI). Once deployed, monitor the 'Service Health' tab here to ensure it comes up 🟢 UP.";
+            case "services_logs" -> "**Viewing Logs**\n\nFor deep application logs, check your centralized logging tool (e.g., Datadog, ELK, GCP Cloud Logging). This dashboard focuses on top-level Health Status and Resource Metrics.";
+            case "services_health" -> "**Service Health**\n\nStatus is determined by active probes. \n🟢 UP\n🟡 DEGRADED (slow response)\n🔴 DOWN (failing probes)\n⚪ UNKNOWN. Navigate to the Services tab for deep latency metrics.";
+            case "services_general" -> String.format("**Services Overview**\n\nMonitoring %d services currently. The dashboard donut chart gives you an instant visual of your fleet's health.", serviceHealthRepository.count());
+
+            // Resources
+            case "resources_cpu" -> "**CPU Metrics**\n\nCPU utilization over 80% triggers an alert. If a service consistently hits high CPU, consider horizontally scaling (adding more instances) or profiling the code.";
+            case "resources_memory" -> "**Memory (RAM) Metrics**\n\nHigh memory usage might indicate a memory leak. If it hits the red zone (>80%), the JVM might OOM crash soon. Check the 'Resource Utilization' panel.";
+            case "resources_disk" -> "**Disk Storage Metrics**\n\nDisk running out is a silent killer. Ensure log rotation is active and database volumes have auto-grow enabled. Check the metrics tab for alerts.";
+            case "resources_scale" -> "**Scaling Services**\n\nIf resources are in the red, you need to scale. For GKE/K8s, adjust your HPA (Horizontal Pod Autoscaler). For Cloud Run, increase max-instances.";
+            case "resources_general" -> String.format("**Resource Overview**\n\nWe ingest thousands of data points. Currently holding %d metric records. Anything over 80%% utilization triggers a dashboard alert.", resourceUsageRepository.count());
+
+            // Severity
+            case "severity_levels" -> "**Severity Matrix**\n\n🔴 **SEV1**: Critical system down. Drop everything.\n🟠 **SEV2**: Major feature broken. High priority.\n🟡 **SEV3**: Partial degradation. Workaround exists.\n🔵 **SEV4**: Minor/Cosmetic. Handle in regular sprint.";
+
+            // Roles
+            case "roles_admin" -> "**Admin Role**\n\nAdmins have 'God Mode'. They can create, edit, resolve, and DELETE incidents. They also manage users.";
+            case "roles_engineer" -> "**Engineer Role**\n\nEngineers are the operators. They can create, edit, and resolve incidents, and view all system metrics. They cannot delete history.";
+            case "roles_viewer" -> "**Viewer Role**\n\nViewers (like product managers) can look at dashboards and incidents but cannot alter system state or touch incidents.";
+            case "roles_general" -> "**Access Control**\n\nThe dashboard uses RBAC: ADMIN, ENGINEER, and VIEWER. You are authenticated via a secure JWT token.";
+
+            // Best Practices
+            case "best_practices_cost" -> "**Cost Optimization**\n\nTo save money:\n1. Scale down dev/staging environments at night.\n2. Delete unattached persistent volumes.\n3. Ensure DB instances are right-sized (check CPU/RAM metrics here).";
+            case "best_practices_reliability" -> "**Reliability Practices**\n\n1. Always write detailed incident resolution notes.\n2. Set up automated scaling.\n3. Keep an eye on the 'Resource Alerts' section of this dashboard.";
+
+            // Dashboard
+            case "dashboard_navigation" -> "**Navigation Help**\n\nUse the left sidebar. **Dashboard** is the summary. **Services** shows latency and status. **Incidents** is your ticketing system. **Resources** shows charts.";
+            case "dashboard_general" -> "**The Dashboard**\n\nThe main view aggregates data from Services, Incidents, and Resources into one 'Super View' that auto-refreshes every 30 seconds.";
+
+            // Support & History
+            case "history" -> "**Audit & History**\n\nWe never delete data unless an Admin forces it. You can view all past incidents in the 'Incidents' tab by filtering by the 'RESOLVED' status.";
+            case "support" -> "**Need Human Help?**\n\nIf the system is completely broken, ping the primary On-Call engineer via PagerDuty or your internal Slack #ops-critical channel.";
+
+            // Conversational
+            case "greeting" -> "👋 **Hello there!** I am your CloudOps AI. I can analyze system health, guide you through incident resolution, or explain infrastructure metrics. What's on your mind?";
+            case "identity" -> "🤖 **I am the CloudOps Assistant.** An AI designed to help Site Reliability Engineers (SREs) and Developers navigate this observability platform.";
+            case "capabilities" -> "**My Capabilities**\n\nI am wired into the dashboard's brain. Ask me about:\n- Incident creation/resolution\n- Service Health\n- CPU/Memory metrics\n- Severity levels\n- Or use your Voice (click the mic!)";
+            case "thanks" -> "You're very welcome! Stay frosty and keep those systems 🟢 UP.";
+
+            default -> "**CloudOps Assistant**\n\nI'm not entirely sure how to answer that. Try asking me about:\n• \"How to create an incident\"\n• \"What are the severity levels?\"\n• \"How to read CPU metrics\"\n• \"What does an Engineer role do?\"";
         };
-    }
-
-    private String buildGreetingResponse() {
-        long activeIncidents = incidentRepository.count();
-        long services = serviceHealthRepository.count();
-        return String.format(
-            "👋 Welcome to CloudOps Assistant! I'm here to help you navigate and understand this operations dashboard.\n\n" +
-            "**Current System Snapshot:**\n" +
-            "• %d services being monitored\n" +
-            "• %d total incidents in the system\n\n" +
-            "I can help you with:\n" +
-            "• Understanding incidents and their severity levels\n" +
-            "• Navigating service health monitoring\n" +
-            "• Managing resource utilization alerts\n" +
-            "• Explaining roles and permissions\n\n" +
-            "What would you like to know?",
-            services, activeIncidents
-        );
-    }
-
-    private String buildIncidentResponse(String message) {
-        long total = incidentRepository.count();
-        if (message.toLowerCase().contains("create") || message.toLowerCase().contains("new")) {
-            return "**Creating an Incident**\n\n" +
-                "To create a new incident:\n" +
-                "1. Navigate to the **Incidents** section in the sidebar\n" +
-                "2. Click the **+ New Incident** button (requires Engineer or Admin role)\n" +
-                "3. Fill in the required fields:\n" +
-                "   - **Title**: Clear, concise description of the problem\n" +
-                "   - **Severity**: SEV1 (Critical) → SEV4 (Low)\n" +
-                "   - **Affected Service**: Which service is impacted\n" +
-                "   - **Description**: Detailed impact and symptoms\n" +
-                "4. Assign to an on-call engineer if known\n\n" +
-                "The system will auto-generate an incident number (e.g., INC-2024-001).";
-        }
-        if (message.toLowerCase().contains("resolve") || message.toLowerCase().contains("close")) {
-            return "**Resolving an Incident**\n\n" +
-                "To resolve an incident:\n" +
-                "1. Open the incident from the **Incidents** list\n" +
-                "2. Click **Resolve Incident** button\n" +
-                "3. Enter detailed **Resolution Notes** — this is required for the postmortem record\n" +
-                "4. The incident status will change to **RESOLVED**\n\n" +
-                "⚠️ Note: Resolution notes are mandatory. A good postmortem captures: root cause, timeline, and preventive actions.";
-        }
-        return String.format(
-            "**Incident Management Overview**\n\n" +
-            "The system currently tracks **%d incidents** total.\n\n" +
-            "**Incident Lifecycle:**\n" +
-            "OPEN → IN_PROGRESS → MONITORING → RESOLVED\n\n" +
-            "**Key Concepts:**\n" +
-            "• **Active incidents** include OPEN, IN_PROGRESS, and MONITORING states\n" +
-            "• **Critical incidents** are SEV1 and SEV2 — shown as a red banner on the dashboard\n" +
-            "• **Incident numbers** are auto-generated in format INC-YYYY-NNN\n" +
-            "• Only **Engineers** and **Admins** can create or resolve incidents\n\n" +
-            "Ask me about: creating incidents, severity levels, or resolving incidents.",
-            total
-        );
-    }
-
-    private String buildServiceResponse() {
-        long total = serviceHealthRepository.count();
-        return String.format(
-            "**Service Health Monitoring**\n\n" +
-            "Currently monitoring **%d services** across your infrastructure.\n\n" +
-            "**Status Levels:**\n" +
-            "🟢 **UP** — Service is operating normally\n" +
-            "🟡 **DEGRADED** — Partial outage or reduced performance\n" +
-            "🔴 **DOWN** — Service is completely unavailable\n" +
-            "🔵 **MAINTENANCE** — Planned downtime window\n" +
-            "⚪ **UNKNOWN** — Health check not reachable\n\n" +
-            "**Reading the Dashboard:**\n" +
-            "• The donut chart shows your overall fleet health at a glance\n" +
-            "• Each service card shows: status, region, and response time\n" +
-            "• Services are grouped by environment (prod/staging/dev)\n\n" +
-            "Navigate to **Service Health** in the sidebar for the full list.",
-            total
-        );
-    }
-
-    private String buildResourceResponse() {
-        long total = resourceUsageRepository.count();
-        return String.format(
-            "**Resource Utilization Monitoring**\n\n" +
-            "Tracking **%d resource metrics** across all services.\n\n" +
-            "**Monitored Resource Types:**\n" +
-            "• **CPU** — Processor utilization percentage\n" +
-            "• **Memory** — RAM consumption percentage\n" +
-            "• **Disk** — Storage capacity used\n" +
-            "• **Network** — Bandwidth utilization\n\n" +
-            "**Alert Thresholds:**\n" +
-            "• Resources exceeding **80%%** utilization trigger an alert\n" +
-            "• Alerting resources appear at the top of the resource dashboard\n" +
-            "• The dashboard shows a count of active resource alerts in the header\n\n" +
-            "**Pro Tips:**\n" +
-            "• Progress bars turn **orange/red** when approaching critical thresholds\n" +
-            "• Historical trends help you forecast capacity needs\n" +
-            "• Correlate resource spikes with active incidents for root cause analysis",
-            total
-        );
-    }
-
-    private String buildDashboardResponse() {
-        return "**Navigating the Operations Dashboard**\n\n" +
-            "The dashboard is your command center — it gives you a real-time overview of your entire infrastructure.\n\n" +
-            "**Dashboard Sections:**\n\n" +
-            "📊 **Summary Cards** (top row)\n" +
-            "   - Total Services monitored\n" +
-            "   - Services currently down\n" +
-            "   - Active incident count\n" +
-            "   - Resource alerts firing\n\n" +
-            "🚨 **Critical Alert Banner**\n" +
-            "   - Appears automatically when SEV1/SEV2 incidents are active\n" +
-            "   - Click to jump directly to the incidents list\n\n" +
-            "📈 **Service Health Panel** (left column)\n" +
-            "   - Donut chart showing fleet health distribution\n" +
-            "   - List of your services with current status\n\n" +
-            "⚡ **Resource Utilization Panel** (right column)\n" +
-            "   - Real-time resource metrics with progress bars\n" +
-            "   - Highlights any resources over threshold\n\n" +
-            "The dashboard **auto-refreshes every 30 seconds** — you can also manually refresh using the button.";
-    }
-
-    private String buildRolesResponse() {
-        return "**Roles and Permissions**\n\n" +
-            "CloudOps Dashboard uses role-based access control (RBAC) with three roles:\n\n" +
-            "👑 **ADMIN**\n" +
-            "   - Full access to all features\n" +
-            "   - Can create, update, and delete incidents\n" +
-            "   - Can manage users and system settings\n" +
-            "   - Can access all reports and audit logs\n\n" +
-            "🔧 **ENGINEER**\n" +
-            "   - Can create and resolve incidents\n" +
-            "   - Can update incident status and assign ownership\n" +
-            "   - Read access to all monitoring data\n" +
-            "   - Cannot delete incidents or manage users\n\n" +
-            "👁️ **VIEWER**\n" +
-            "   - Read-only access to all dashboards\n" +
-            "   - Can view incidents, services, and resource metrics\n" +
-            "   - Cannot create, modify, or resolve incidents\n\n" +
-            "**Default Accounts:**\n" +
-            "• `admin` — Admin role\n" +
-            "• `engineer1` — Engineer role\n" +
-            "• `viewer1` — Viewer role";
-    }
-
-    private String buildActionsResponse(String message) {
-        if (message.toLowerCase().contains("assign")) {
-            return "**Assigning an Incident**\n\n" +
-                "To assign an incident to an engineer:\n" +
-                "1. Open the incident from the Incidents list\n" +
-                "2. Click **Edit** or the assignment field\n" +
-                "3. Select the responsible engineer from the dropdown\n" +
-                "4. Save the change\n\n" +
-                "The assigned engineer will appear on the incident card and dashboard widget.\n" +
-                "Best practice: Assign incidents immediately to avoid confusion about ownership.";
-        }
-        if (message.toLowerCase().contains("escalate")) {
-            return "**Escalating an Incident**\n\n" +
-                "To escalate the severity of an incident:\n" +
-                "1. Open the incident detail view\n" +
-                "2. Click **Edit Incident**\n" +
-                "3. Change the **Severity** field (e.g., SEV3 → SEV1)\n" +
-                "4. Update the description with escalation reason\n" +
-                "5. Save — the dashboard will reflect the new severity immediately\n\n" +
-                "⚠️ Escalating to SEV1 or SEV2 will trigger the critical alert banner on all team members' dashboards.";
-        }
-        return "**Incident Actions Guide**\n\n" +
-            "Available actions on incidents:\n\n" +
-            "• **Acknowledge** — Change status from OPEN to IN_PROGRESS\n" +
-            "• **Assign** — Set the responsible engineer\n" +
-            "• **Update** — Edit title, description, or severity\n" +
-            "• **Escalate** — Increase severity level\n" +
-            "• **Resolve** — Mark as resolved with resolution notes\n" +
-            "• **Delete** — Admin only; use sparingly to preserve audit trail\n\n" +
-            "Ask me specifically about: assigning, escalating, or resolving incidents.";
-    }
-
-    private String buildSeverityResponse() {
-        return "**Incident Severity Levels**\n\n" +
-            "Severity determines the urgency and response time required:\n\n" +
-            "🔴 **SEV1 — Critical**\n" +
-            "   - Complete service outage affecting all users\n" +
-            "   - Production data at risk\n" +
-            "   - Response time: Immediate (< 15 minutes)\n" +
-            "   - Escalation: Entire on-call team + management\n\n" +
-            "🟠 **SEV2 — High**\n" +
-            "   - Major functionality impaired for many users\n" +
-            "   - Significant business impact\n" +
-            "   - Response time: < 1 hour\n" +
-            "   - Escalation: On-call engineer + lead\n\n" +
-            "🟡 **SEV3 — Medium**\n" +
-            "   - Partial outage, workaround available\n" +
-            "   - Limited user impact\n" +
-            "   - Response time: < 4 hours\n" +
-            "   - Escalation: On-call engineer\n\n" +
-            "🔵 **SEV4 — Low**\n" +
-            "   - Minor issue, cosmetic or edge case\n" +
-            "   - Minimal user impact\n" +
-            "   - Response time: Next business day\n" +
-            "   - Escalation: Standard ticket queue";
-    }
-
-    private String buildHistoryResponse() {
-        return "**Incident History and Reporting**\n\n" +
-            "All incidents are permanently stored for audit and postmortem purposes.\n\n" +
-            "**Accessing History:**\n" +
-            "1. Navigate to **Incidents** in the sidebar\n" +
-            "2. The list shows all incidents, including resolved ones\n" +
-            "3. Use filters to narrow by status, severity, or date range\n\n" +
-            "**What's Recorded:**\n" +
-            "• Incident creation timestamp and creator\n" +
-            "• All status transitions with timestamps\n" +
-            "• Resolution notes and resolver\n" +
-            "• Assigned engineer history\n\n" +
-            "**Best Practices:**\n" +
-            "• Always add detailed resolution notes — they become your postmortem baseline\n" +
-            "• Use consistent titles so patterns are discoverable (e.g., 'Payment Service - DB Connection Failure')\n" +
-            "• Correlate incidents with resource metric spikes for root cause analysis";
-    }
-
-    private String buildHelpResponse(String message) {
-        if (message.toLowerCase().contains("chart") || message.toLowerCase().contains("graph")) {
-            return "**Reading the Charts**\n\n" +
-                "**Service Health Donut Chart:**\n" +
-                "• Each segment represents a status category\n" +
-                "• Green = UP, Yellow = DEGRADED, Red = DOWN, Grey = UNKNOWN\n" +
-                "• Hover over segments to see exact counts\n\n" +
-                "**Resource Progress Bars:**\n" +
-                "• Blue bars = normal utilization (< 80%)\n" +
-                "• Orange/red bars = above threshold (≥ 80%)\n" +
-                "• The percentage shown is current utilization\n\n" +
-                "All charts auto-refresh every 30 seconds alongside the rest of the dashboard data.";
-        }
-        return "**CloudOps Assistant — Help Guide**\n\n" +
-            "I can explain any part of this operations dashboard. Try asking:\n\n" +
-            "🔍 **Understanding Data**\n" +
-            "• \"What do the severity levels mean?\"\n" +
-            "• \"How do I read the service health chart?\"\n" +
-            "• \"What triggers a resource alert?\"\n\n" +
-            "⚡ **Taking Actions**\n" +
-            "• \"How do I create an incident?\"\n" +
-            "• \"How do I resolve an incident?\"\n" +
-            "• \"How do I escalate severity?\"\n\n" +
-            "🏗️ **Understanding the System**\n" +
-            "• \"What are the different user roles?\"\n" +
-            "• \"How does the dashboard work?\"\n" +
-            "• \"Where can I find incident history?\"\n\n" +
-            "Just type your question in plain English — I'll do my best to help!";
-    }
-
-    private String buildGeneralResponse() {
-        return "**CloudOps Assistant**\n\n" +
-            "I didn't quite catch that. I'm specialized in helping you understand this operations dashboard.\n\n" +
-            "**I can help with:**\n" +
-            "• Incident management and severity levels\n" +
-            "• Service health monitoring\n" +
-            "• Resource utilization and alerts\n" +
-            "• User roles and permissions\n" +
-            "• Dashboard navigation\n\n" +
-            "Try asking something like:\n" +
-            "• \"How do I create an incident?\"\n" +
-            "• \"What does SEV1 mean?\"\n" +
-            "• \"How do I resolve an incident?\"\n" +
-            "• \"What are the different user roles?\"";
     }
 
     private List<String> generateSuggestions(String intent) {
-        return switch (intent) {
-            case "greeting" -> List.of(
-                "How do I create an incident?",
-                "What do the severity levels mean?",
-                "Explain the dashboard sections"
-            );
-            case "incidents" -> List.of(
-                "How do I resolve an incident?",
-                "What does SEV1 mean?",
-                "How do I assign an incident?"
-            );
-            case "services" -> List.of(
-                "What does DEGRADED status mean?",
-                "How often does health check run?",
-                "How do I view service history?"
-            );
-            case "resources" -> List.of(
-                "What triggers a resource alert?",
-                "How do I view CPU trends?",
-                "What is the alert threshold?"
-            );
-            case "roles" -> List.of(
-                "What can an Engineer do?",
-                "How do I get Admin access?",
-                "What can a Viewer see?"
-            );
-            case "severity" -> List.of(
-                "When should I use SEV1?",
-                "How do I escalate an incident?",
-                "What is the response time for SEV2?"
-            );
-            default -> List.of(
-                "How does the dashboard work?",
-                "What are the user roles?",
-                "How do I create an incident?"
-            );
-        };
+        if (intent.startsWith("incidents")) {
+            return List.of("What is SEV1?", "How do I resolve an incident?", "Assigning incidents");
+        } else if (intent.startsWith("services")) {
+            return List.of("How do I view logs?", "What does DEGRADED mean?", "Deploying services");
+        } else if (intent.startsWith("resources")) {
+            return List.of("Scaling services", "CPU alerts", "Cost optimization");
+        } else if (intent.startsWith("roles")) {
+            return List.of("Admin permissions", "Viewer access", "Engineer responsibilities");
+        } else if (intent.equals("greeting") || intent.equals("identity")) {
+            return List.of("What can you do?", "How to use the dashboard", "Create an incident");
+        }
+        return List.of("Service Health", "Resource Metrics", "Incident Management");
     }
 }

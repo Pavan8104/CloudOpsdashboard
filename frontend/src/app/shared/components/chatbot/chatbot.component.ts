@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked, NgZone } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Subject } from 'rxjs';
@@ -24,17 +24,79 @@ export class ChatbotComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   isOpen = false;
   isLoading = false;
+  isListening = false;
+  hasSpeechSupport = false;
   sessionId = this.generateSessionId();
   messages: ChatMessage[] = [];
   inputControl = new FormControl('', [Validators.required, Validators.maxLength(1000)]);
 
   private destroy$ = new Subject<void>();
   private shouldScrollToBottom = false;
+  private recognition: any;
 
   constructor(
     private http: HttpClient,
-    private authService: AuthService
-  ) {}
+    private authService: AuthService,
+    private ngZone: NgZone
+  ) {
+    this.initSpeechRecognition();
+  }
+
+  private initSpeechRecognition(): void {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      this.hasSpeechSupport = true;
+      this.recognition = new SpeechRecognition();
+      this.recognition.continuous = false;
+      this.recognition.interimResults = true;
+      this.recognition.lang = 'en-US';
+
+      this.recognition.onstart = () => {
+        this.ngZone.run(() => {
+          this.isListening = true;
+        });
+      };
+
+      this.recognition.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((result: any) => result[0])
+          .map((result: any) => result.transcript)
+          .join('');
+        
+        this.ngZone.run(() => {
+          this.inputControl.setValue(transcript);
+        });
+      };
+
+      this.recognition.onerror = (event: any) => {
+        console.error('Speech recognition error', event.error);
+        this.ngZone.run(() => {
+          this.isListening = false;
+        });
+      };
+
+      this.recognition.onend = () => {
+        this.ngZone.run(() => {
+          this.isListening = false;
+          // Optionally auto-send when speech ends
+          // if (this.inputControl.value?.trim()) { this.sendMessage(); }
+        });
+      };
+    }
+  }
+
+  toggleVoice(): void {
+    if (!this.hasSpeechSupport) {
+      alert('Voice recognition is not supported in your browser.');
+      return;
+    }
+    if (this.isListening) {
+      this.recognition.stop();
+    } else {
+      this.inputControl.setValue('');
+      this.recognition.start();
+    }
+  }
 
   ngOnInit(): void {
     this.messages.push({
@@ -50,6 +112,9 @@ export class ChatbotComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   ngOnDestroy(): void {
+    if (this.recognition) {
+      this.recognition.stop();
+    }
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -69,6 +134,10 @@ export class ChatbotComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   sendMessage(): void {
+    if (this.isListening) {
+      this.recognition.stop();
+    }
+    
     const text = this.inputControl.value?.trim();
     if (!text || this.isLoading) return;
 

@@ -16,7 +16,7 @@ RUN mvn clean package -DskipTests
 # =======================
 # STAGE 2: RUNTIME (Red Hat Hardened)
 # =======================
-FROM registry.access.redhat.com/ubi8/openjdk-17-runtime:1.20 AS runtime
+FROM registry.access.redhat.com/ubi8/openjdk-17-runtime:latest AS runtime
 
 # Red Hat UBI images run as user 185 (jboss) by default for safety
 USER 185

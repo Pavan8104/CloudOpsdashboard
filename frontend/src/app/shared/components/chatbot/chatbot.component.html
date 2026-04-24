@@ -75,6 +75,9 @@
     <!-- Input Area -->
     <div class="chat-input-area">
       <div class="input-row">
+        <button class="voice-btn" (click)="toggleVoice()" [class.listening]="isListening" [disabled]="isLoading || !hasSpeechSupport" matTooltip="Voice Input" type="button">
+          <mat-icon>{{ isListening ? 'mic' : 'mic_none' }}</mat-icon>
+        </button>
         <textarea
           [formControl]="inputControl"
           placeholder="Ask me anything about CloudOps..."

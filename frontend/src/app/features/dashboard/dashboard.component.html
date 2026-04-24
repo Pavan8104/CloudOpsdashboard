@@ -99,12 +99,12 @@
         </mat-card-header>
 
         <mat-card-content>
-          <div class="loading-container" *ngIf="isLoadingServices">
+          <div class="loading-container" *ngIf="isLoading">
             <mat-spinner diameter="40"></mat-spinner>
             <span>Loading services...</span>
           </div>
 
-          <div *ngIf="!isLoadingServices">
+          <div *ngIf="!isLoading">
             <div class="chart-container" *ngIf="totalServices > 0">
               <canvas baseChart
                 [data]="serviceHealthChartData"
@@ -152,11 +152,11 @@
         </mat-card-header>
 
         <mat-card-content>
-          <div class="loading-container" *ngIf="isLoadingIncidents">
+          <div class="loading-container" *ngIf="isLoading">
             <mat-spinner diameter="40"></mat-spinner>
           </div>
 
-          <div *ngIf="!isLoadingIncidents">
+          <div *ngIf="!isLoading">
             <div class="incident-item" *ngFor="let incident of activeIncidents | slice:0:5">
               <div class="incident-header">
                 <span class="severity-badge" [class]="'sev' + incident.severity.charAt(3)">
@@ -201,11 +201,11 @@
         </mat-card-header>
 
         <mat-card-content>
-          <div class="loading-container" *ngIf="isLoadingMetrics">
+          <div class="loading-container" *ngIf="isLoading">
             <mat-spinner diameter="40"></mat-spinner>
           </div>
 
-          <div *ngIf="!isLoadingMetrics">
+          <div *ngIf="!isLoading">
             <div class="metric-item" *ngFor="let metric of latestMetrics | slice:0:8">
               <div class="metric-header">
                 <span class="metric-name">{{ metric.serviceName }}</span>
