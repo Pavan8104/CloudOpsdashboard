@@ -3,7 +3,7 @@
 **Project:** CloudOps Dashboard  
 **Report Date:** 2026-04-18  
 **Reporter:** Pavan Sharma  
-**Researched on:** ChatGPT, Gemini, Stack Overflow, Spring Security Docs, OWASP  
+**Researched on:** Stack Overflow, Spring Security Docs, OWASP  
 **Total Bugs Found:** 18  
 **Critical:** 6 | High: 5 | Medium: 4 | Low: 3
 

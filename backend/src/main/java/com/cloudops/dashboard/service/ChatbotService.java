@@ -73,7 +73,7 @@ public class ChatbotService {
 
         // Conversational / Fun
         INTENT_DICT.put("greeting", compile("(?i)\\b(hello|hi|hey|start|begin|greet|morning|evening|afternoon)\\b"));
-        INTENT_DICT.put("identity", compile("(?i)\\b(who are you|what are you|are you ai|bot|robot)\\b"));
+        INTENT_DICT.put("identity", compile("(?i)\\b(who are you|what are you|are you a bot|bot|robot)\\b"));
         INTENT_DICT.put("capabilities", compile("(?i)\\b(what can you do|help me|how can you help|features)\\b"));
         INTENT_DICT.put("thanks", compile("(?i)\\b(thanks|thank you|appreciate|good job)\\b"));
     }
@@ -157,8 +157,8 @@ public class ChatbotService {
             case "support" -> "**Need Human Help?**\n\nIf the system is completely broken, ping the primary On-Call engineer via PagerDuty or your internal Slack #ops-critical channel.";
 
             // Conversational
-            case "greeting" -> "👋 **Hello there!** I am your CloudOps AI. I can analyze system health, guide you through incident resolution, or explain infrastructure metrics. What's on your mind?";
-            case "identity" -> "🤖 **I am the CloudOps Assistant.** An AI designed to help Site Reliability Engineers (SREs) and Developers navigate this observability platform.";
+            case "greeting" -> "👋 **Hello there!** I am your CloudOps Assistant. I can analyze system health, guide you through incident resolution, or explain infrastructure metrics. What's on your mind?";
+            case "identity" -> "🤖 **I am the CloudOps Assistant.** A smart assistant designed to help Site Reliability Engineers (SREs) and Developers navigate this observability platform.";
             case "capabilities" -> "**My Capabilities**\n\nI am wired into the dashboard's brain. Ask me about:\n- Incident creation/resolution\n- Service Health\n- CPU/Memory metrics\n- Severity levels\n- Or use your Voice (click the mic!)";
             case "thanks" -> "You're very welcome! Stay frosty and keep those systems 🟢 UP.";
 

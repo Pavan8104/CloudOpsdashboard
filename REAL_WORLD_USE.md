@@ -22,7 +22,7 @@ CloudOps Dashboard solves exactly this — it is a **real-time operations contro
 - A **SEV1 incident** is automatically surfaced with a red banner across all engineer dashboards
 - The on-call engineer creates an incident, assigns it to the payments team, and tracks resolution — all in one place
 - Resource Usage shows the payment service CPU spiking to 95%, confirming the root cause
-- The AI Assistant guides the junior engineer: "Show me payment service incidents"
+- The Smart Assistant guides the junior engineer: "Show me payment service incidents"
 
 **Real-world equivalent:** PagerDuty + Datadog + Jira combined into one tool.
 
@@ -35,7 +35,7 @@ CloudOps Dashboard solves exactly this — it is a **real-time operations contro
 - **Free to run** — deploys on Railway free tier, no infrastructure cost
 - Three role levels: **Admin** (CTO), **Engineer** (developer), **Viewer** (investor/stakeholder)
 - Investors can log in as Viewer and see system status without touching anything
-- The AI chatbot explains metrics in plain English — no Datadog expertise needed
+- The Smart chatbot explains metrics in plain English — no Datadog expertise needed
 
 **Business value:** Replaces $500+/month in monitoring tooling with a free self-hosted solution.
 
@@ -127,7 +127,7 @@ This single project demonstrates:
 - ✅ CI/CD pipeline setup (GitHub Actions)
 - ✅ Cloud deployment (Railway)
 - ✅ Responsive UI/UX design
-- ✅ AI/chatbot integration
+- ✅ Smart chatbot integration
 - ✅ Git version control (300+ commits)
 - ✅ Technical documentation
 

@@ -2,7 +2,7 @@
 live link will exoire due to credit exhaust link : https://cloudops-frontend-production.up.railway.app/login
 **Enterprise-grade Cloud Operations Monitoring Platform**
 
-A full-stack operations dashboard for real-time service health monitoring, incident tracking, resource utilization analytics, and an AI-powered assistant.
+A full-stack operations dashboard for real-time service health monitoring, incident tracking, resource utilization analytics, and a smart assistant.
 
 ---
 
@@ -114,7 +114,7 @@ Full deploy guide: see `projectreport.md`
 | `/api/incidents/critical` | GET | Viewer+ | SEV1/SEV2 active |
 | `/api/resources/latest` | GET | Viewer+ | Latest metrics |
 | `/api/resources/alerts` | GET | Viewer+ | Threshold alerts |
-| `/api/chatbot/message` | POST | Viewer+ | AI assistant |
+| `/api/chatbot/message` | POST | Viewer+ | Smart assistant |
 
 ---
 

@@ -12,7 +12,7 @@ It lets you:
 - See which services are **up, degraded, or down** in real time
 - **Create and track incidents** (outages) from detection to resolution
 - Monitor **CPU, memory, disk, and network** usage across all services
-- Chat with an **AI assistant** that explains everything in plain English
+- Chat with a **smart assistant** that explains everything in plain English
 
 ---
 
@@ -144,7 +144,7 @@ Cloud OPS dashboard/
 - Progress bars turn orange/red when utilization exceeds **80%**
 - Alerting resources are flagged separately at the top
 
-### 5.6 AI Assistant (Chatbot)
+### 5.6 Smart Assistant (Chatbot)
 - Floating button in the bottom-right corner of every page
 - Understands 10+ intent categories (incidents, severity, roles, actions, etc.)
 - Responds with **real live data** from your database (actual service count, incident count)
@@ -318,7 +318,7 @@ GET /resources/{service}   History for one service
 
 ### Chatbot
 ```
-POST /chatbot/message      Body: { message, sessionId }  → AI response
+POST /chatbot/message      Body: { message, sessionId }  → Assistant response
 GET  /chatbot/health       Chatbot status check
 ```
 
