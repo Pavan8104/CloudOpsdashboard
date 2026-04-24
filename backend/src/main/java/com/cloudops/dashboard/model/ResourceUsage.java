@@ -43,7 +43,7 @@ public class ResourceUsage {
     private ResourceType resourceType;
 
     // Current usage value - CPU ke liye percentage, Memory ke liye MB/GB
-    @Column(nullable = false)
+    @Column(name = "metric_value", nullable = false)
     private Double value;
 
     // Unit - PERCENT, MB, GB, MBPS, REQUESTS_PER_SEC etc.
