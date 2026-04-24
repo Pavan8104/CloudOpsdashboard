@@ -46,7 +46,7 @@ docker compose up -d
 | Layer | Technology |
 |---|---|
 | Frontend | Angular 17, Angular Material, Chart.js |
-| Backend | Java 17, Spring Boot 3.2, Spring Security |
+| Backend | Java 21, Spring Boot 3.2, Spring Security |
 | Database | PostgreSQL 15 (prod), H2 (local dev) |
 | Auth | JWT (JJWT 0.12.3), BCrypt cost=12 |
 | DevOps | Docker, Docker Compose, GitHub Actions |
