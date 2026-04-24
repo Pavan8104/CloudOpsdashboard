@@ -85,12 +85,25 @@ export class IncidentsComponent implements OnInit {
   }
 
   resolveIncident(incident: Incident): void {
-    const notes = prompt('Resolution notes do - kya kiya tha?');
-    if (!notes) return;
+    const notes = prompt('Please provide resolution notes (required):');
+    
+    // Validate notes - cannot be empty or just spaces
+    if (notes === null) return; // User clicked Cancel
+    
+    const trimmedNotes = notes.trim();
+    if (!trimmedNotes) {
+      alert('Resolution notes are required to resolve an incident.');
+      return;
+    }
 
-    this.incidentService.resolve(incident.id, notes).subscribe({
-      next: () => { this.loadIncidents(); },
-      error: (err) => { console.error('Resolve failed:', err); }
+    this.incidentService.resolve(incident.id, trimmedNotes).subscribe({
+      next: () => { 
+        this.loadIncidents(); 
+      },
+      error: (err) => { 
+        console.error('Resolve failed:', err);
+        alert('Failed to resolve incident. Please ensure you have permission and provided notes.');
+      }
     });
   }
 
