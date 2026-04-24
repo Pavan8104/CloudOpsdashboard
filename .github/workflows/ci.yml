@@ -56,11 +56,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Java 17 setup - backend ke liye
-      - name: Set up JDK 17
+      # Java 21 setup - backend ke liye
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           cache: maven  # Maven dependencies cache karo - faster builds
 
