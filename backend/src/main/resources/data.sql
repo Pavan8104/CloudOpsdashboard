@@ -23,9 +23,9 @@ VALUES (
 INSERT INTO users (username, email, password, full_name, enabled, created_at, updated_at)
 VALUES (
     'engineer1',
-    'engineer@cloudops.internal',
+    'pavan@cloudops.internal',
     '$2b$10$iuvciBocxQLcvv7yXeYHUuzZvYT23LOic3bsc79hcoL4DCB0GqMt6',
-    'Rahul Kumar (SRE)',
+    'Pavan Kumar (Lead SRE)',
     true,
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
