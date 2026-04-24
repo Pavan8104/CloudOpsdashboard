@@ -32,7 +32,7 @@ Browser (User)
 ┌─────────────────┐
 │  Spring Boot    │  ← Backend (business logic + security)
 │  Port 8080      │
-│  Java 17 + JWT  │
+│  Java 21 + JWT  │
 └────────┬────────┘
          │ JDBC
          ▼
@@ -54,7 +54,7 @@ Browser (User)
 | Layer | Technology | Why |
 |---|---|---|
 | Frontend | Angular 17 + Material UI | Fast, component-based, enterprise-grade |
-| Backend | Spring Boot 3 (Java 17) | Production-proven, secure, fast |
+| Backend | Spring Boot 3 (Java 21) | Production-proven, secure, fast |
 | Database | PostgreSQL 15 | Reliable, ACID-compliant, free |
 | Auth | JWT (JSON Web Tokens) | Stateless, scalable, no session storage |
 | Container | Docker + Docker Compose | Run anywhere, consistent environments |
