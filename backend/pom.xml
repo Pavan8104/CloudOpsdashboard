@@ -158,6 +158,11 @@
     	<artifactId>bucket4j-core</artifactId>
     	<version>8.10.1</version>
     </dependency>
+    <dependency>
+        <groupId>net.logstash.logback</groupId>
+        <artifactId>logstash-logback-encoder</artifactId>
+        <version>7.4</version>
+    </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -176,7 +181,7 @@
                 </configuration>
             </plugin>
 
-            <!-- Compiler plugin - Java 17 features use karne ke liye explicitly set karo -->
+            <!-- Compiler plugin - Java 17 features -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -191,6 +196,20 @@
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
+            </plugin>
+
+            <!-- OWASP Dependency-Check - Scans libraries for known vulnerabilities (CVEs) -->
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>9.0.9</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

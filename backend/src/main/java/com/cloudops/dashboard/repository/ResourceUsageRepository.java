@@ -61,4 +61,7 @@ public interface ResourceUsageRepository extends JpaRepository<ResourceUsage, Lo
     // Latest entry for a specific service and resource type
     ResourceUsage findTopByServiceNameAndResourceTypeOrderByRecordedAtDesc(
         String serviceName, ResourceType resourceType);
+
+    // Prune historical data - deletes records older than a specific timestamp
+    void deleteByRecordedAtBefore(LocalDateTime expiryDate);
 }

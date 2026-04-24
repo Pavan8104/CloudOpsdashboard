@@ -14,28 +14,24 @@ RUN mvn clean package -DskipTests
 
 
 # =======================
-# STAGE 2: RUNTIME
+# STAGE 2: RUNTIME (Red Hat Hardened)
 # =======================
-FROM eclipse-temurin:17-jre AS runtime
+FROM registry.access.redhat.com/ubi8/openjdk-17-runtime:1.20 AS runtime
 
-RUN apt-get update && \
-    apt-get install -y wget && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN addgroup --system cloudops && \
-    adduser --system --ingroup cloudops cloudops
+# Red Hat UBI images run as user 185 (jboss) by default for safety
+USER 185
 
 WORKDIR /app
 
+# Copy JAR from builder stage
 COPY --from=builder /app/target/*.jar app.jar
-
-USER cloudops
 
 EXPOSE 8080
 
-ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError"
+# Enterprise-grade JVM settings
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom"
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
-    CMD wget --quiet --tries=1 --spider http://localhost:8080/api/actuator/health || exit 1
+    CMD curl -f http://localhost:8080/api/actuator/health || exit 1
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

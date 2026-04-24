@@ -127,6 +127,23 @@ public class ResourceUsageService {
     }
 
     /**
+     * Prunes historical resource metrics older than 30 days.
+     * Scheduled to run every night at 2:00 AM.
+     */
+    @Scheduled(cron = "0 0 2 * * *")
+    public void pruneHistoricalMetrics() {
+        LocalDateTime expiryDate = LocalDateTime.now().minusDays(30);
+        log.info("Starting scheduled pruning of metrics older than: {}", expiryDate);
+        
+        try {
+            resourceUsageRepository.deleteByRecordedAtBefore(expiryDate);
+            log.info("Successfully pruned historical metrics.");
+        } catch (Exception e) {
+            log.error("Failed to prune historical metrics", e);
+        }
+    }
+
+    /**
      * Demo metrics generate karo - scheduled, har minute chalta hai.
      * PRODUCTION MEIN HATA DENA - yeh sirf demo ke liye hai!
      * Real system mein GCP Cloud Monitoring API se pull karo.
