@@ -45,14 +45,14 @@ jobs:
 
       - name: Redeploy backend on Railway
         run: |
-          curl -s -X POST "https://backboard.railway.com/graphql/v2" \
+          curl -f -s -X POST "https://backboard.railway.com/graphql/v2" \
             -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d '{"query":"mutation { serviceInstanceDeploy(serviceId: \"ad0b526f-6f55-4a22-8715-9244a8c0a437\", environmentId: \"039d041d-957e-42e3-a3cb-d940642172e3\") }"}'
 
       - name: Redeploy frontend on Railway
         run: |
-          curl -s -X POST "https://backboard.railway.com/graphql/v2" \
+          curl -f -s -X POST "https://backboard.railway.com/graphql/v2" \
             -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d '{"query":"mutation { serviceInstanceDeploy(serviceId: \"a52a6edb-d385-4032-bb68-c69993307f88\", environmentId: \"039d041d-957e-42e3-a3cb-d940642172e3\") }"}'
