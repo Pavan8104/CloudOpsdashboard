@@ -34,6 +34,7 @@ jobs:
   backend-test:
     name: Backend - Test & Build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     services:
       # Tests ke liye PostgreSQL - real database tests achhe hote hain
@@ -107,6 +108,7 @@ jobs:
   frontend-test:
     name: Frontend - Test & Build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout code
