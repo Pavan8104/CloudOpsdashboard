@@ -125,12 +125,6 @@ jobs:
           cd frontend
           npm ci  # ci use karo - package-lock.json se exact versions install
 
-      # Lint check - code quality
-      - name: Run lint
-        run: |
-          cd frontend
-          npm run lint || true  # Lint errors se build fail mat karo abhi
-
       # Production build banao
       - name: Build frontend for production
         run: |
