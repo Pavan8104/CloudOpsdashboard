@@ -68,6 +68,7 @@ jobs:
       - name: Run backend tests
         run: |
           cd backend
+          export MAVEN_OPTS="-Xmx1024m"
           mvn test -Dspring.profiles.active=test \
             -Dspring.datasource.url=jdbc:postgresql://localhost:5432/cloudopsdb_test \
             -Dspring.datasource.username=cloudops \
