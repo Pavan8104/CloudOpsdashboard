@@ -82,7 +82,6 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/login", "/auth/register").permitAll()
                 .requestMatchers("/actuator/health/**", "/actuator/info").permitAll()
-                .requestMatchers("/h2-console/**").permitAll() // H2 console handle via properties
                 .requestMatchers(HttpMethod.GET, "/services/**").hasAnyRole("ADMIN", "ENGINEER", "VIEWER")
                 .requestMatchers(HttpMethod.POST, "/services/**").hasAnyRole("ADMIN", "ENGINEER")
                 .requestMatchers(HttpMethod.PUT, "/services/**").hasAnyRole("ADMIN", "ENGINEER")
