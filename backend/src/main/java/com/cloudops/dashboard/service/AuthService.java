@@ -92,7 +92,7 @@ public class AuthService {
 
     public User assignRole(Long userId, Role role) {
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+            .orElseThrow(() -> new com.cloudops.dashboard.exception.ResourceNotFoundException("User", "id", userId));
         user.getRoles().add(role);
         User updated = userRepository.save(user);
         log.info("Role {} assigned to user: {}", role, user.getUsername());
@@ -101,7 +101,7 @@ public class AuthService {
 
     public User toggleUserStatus(Long userId, boolean enabled) {
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+            .orElseThrow(() -> new com.cloudops.dashboard.exception.ResourceNotFoundException("User", "id", userId));
         user.setEnabled(enabled);
         User updated = userRepository.save(user);
         log.info("User {} status changed to: {}", user.getUsername(), enabled ? "ENABLED" : "DISABLED");
