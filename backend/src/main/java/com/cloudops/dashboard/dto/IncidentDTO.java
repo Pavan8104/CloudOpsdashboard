@@ -4,6 +4,7 @@ import com.cloudops.dashboard.model.Incident.IncidentStatus;
 import com.cloudops.dashboard.model.Incident.Severity;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,8 +29,10 @@ public class IncidentDTO {
     private Long id;
 
     @NotBlank(message = "Incident title dena zaroori hai - kya hua yeh batao")
+    @Size(max = 200, message = "Title too long")
     private String title;
 
+    @Size(max = 2000, message = "Description too long")
     private String description;
 
     @NotNull(message = "Severity toh batao - SEV1 se SEV4 mein se koi ek")
@@ -53,6 +56,8 @@ public class IncidentDTO {
 
     private LocalDateTime startedAt;
     private LocalDateTime resolvedAt;
+
+    @Size(max = 2000, message = "Resolution notes too long")
     private String resolutionNotes;
     private Integer affectedUsersCount;
     private String incidentNumber;

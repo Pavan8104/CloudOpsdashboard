@@ -60,7 +60,7 @@ public class IncidentController {
     @PreAuthorize("hasAnyRole('ADMIN', 'ENGINEER')")
     public ResponseEntity<IncidentDTO> updateIncident(
             @PathVariable Long id,
-            @RequestBody IncidentDTO dto) {
+            @Valid @RequestBody IncidentDTO dto) {
         return ResponseEntity.ok(incidentService.updateIncident(id, dto));
     }
 
