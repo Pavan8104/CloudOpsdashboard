@@ -23,6 +23,10 @@ public class JwtTokenProvider {
     private long jwtExpirationMs;
 
     private SecretKey getSigningKey() {
+        if (jwtSecret == null || jwtSecret.length() < 32) {
+            log.error("JWT Secret is too weak or missing. It must be at least 32 characters long.");
+            throw new IllegalStateException("JWT Secret is too weak for production use.");
+        }
         byte[] keyBytes = Decoders.BASE64.decode(
             java.util.Base64.getEncoder().encodeToString(jwtSecret.getBytes())
         );
