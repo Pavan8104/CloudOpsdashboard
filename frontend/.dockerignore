@@ -1,0 +1,23 @@
+# frontend/.dockerignore
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Builds
+dist/
+out-tsc/
+bazel-out/
+.angular/
+
+# IDE & Git
+.git/
+.vscode/
+.idea/
+
+# Environment configs with secrets
+.env
+.env.*
+
+# Tests
+coverage/
