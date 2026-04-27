@@ -84,12 +84,7 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- H2 in-memory database - local development aur tests ke liye super handy -->
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>runtime</scope>
-        </dependency>
+        <!-- H2 dependency removed - migrating fully to PostgreSQL -->
 
         <!-- ============================================================ -->
         <!-- JWT - Token based auth, stateless API ke liye zaroori hai    -->
