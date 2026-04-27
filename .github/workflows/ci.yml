@@ -128,6 +128,18 @@ jobs:
           cd frontend
           npm ci  # ci use karo - package-lock.json se exact versions install
 
+      # Strict lint check
+      - name: Run lint
+        run: |
+          cd frontend
+          npm run lint
+
+      # Frontend test check
+      - name: Run frontend tests
+        run: |
+          cd frontend
+          npm run test:ci
+
       # Production build banao
       - name: Build frontend for production
         run: |
