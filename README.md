@@ -155,4 +155,13 @@ Cloud OPS dashboard/
 ---
 
 *CloudOps Dashboard v1.0 — 210 commits — Secured, Containerized, Production-Ready*
+
+## 🛡️ Production Security Checklist
+- [x] **JWT Secret Strength**: Validation implemented in `JwtTokenProvider`.
+- [x] **Rate Limiting**: Brute force protection on Login and Registration.
+- [x] **Security Headers**: Tightened CSP, HSTS, and XSS headers in `SecurityConfig`.
+- [x] **Input Validation**: Strict constraints on DTOs and Controller endpoints.
+- [ ] **Secrets Management**: Use environment variables (configured in `application.properties`).
+- [ ] **HTTPS**: Must be enforced at the hosting provider (Render/GCP).
+
 # 
