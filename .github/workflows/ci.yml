@@ -135,7 +135,7 @@ jobs:
       - name: Build frontend for production
         run: |
           cd frontend
-          npm run build
+          npm run build:prod
         env:
           NODE_OPTIONS: '--max_old_space_size=4096'  # Large builds ke liye
 
@@ -144,7 +144,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
-          path: frontend/dist/
+          path: frontend/dist/cloudops-dashboard/browser/
           retention-days: 5
 
   # ============================================================
