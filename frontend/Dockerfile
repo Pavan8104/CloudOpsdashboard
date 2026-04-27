@@ -30,4 +30,7 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
     CMD curl -f http://localhost:8080 || exit 1
 
-CMD ["nginx", "-g", "daemon off;"]
+# Provide default if not set
+ENV BACKEND_URL="http://localhost:8080"
+
+CMD ["/bin/sh", "-c", "sed -i \"s|BACKEND_URL_PLACEHOLDER|$BACKEND_URL|g\" /etc/nginx/nginx.conf && nginx -g 'daemon off;'"]
