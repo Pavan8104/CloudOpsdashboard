@@ -40,7 +40,16 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody com.cloudops.dashboard.dto.RegisterRequest request) {
+    public ResponseEntity<Map<String, Object>> register(
+            @Valid @RequestBody com.cloudops.dashboard.dto.RegisterRequest request,
+            jakarta.servlet.http.HttpServletRequest httpServletRequest) {
+        
+        String ip = httpServletRequest.getRemoteAddr();
+        if (!rateLimitingService.resolveBucket(ip).tryConsume(1)) {
+            log.warn("Registration rate limit exceeded for IP: {}", ip);
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
+        }
+
         User user = authService.registerUser(
             request.getUsername(),
             request.getEmail(),
