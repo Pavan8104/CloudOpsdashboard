@@ -5,9 +5,9 @@ services:
     image: postgres:15-alpine
     container_name: cloudops-postgres
     environment:
-      POSTGRES_DB: cloudopsdb
-      POSTGRES_USER: cloudops
-      POSTGRES_PASSWORD: cloudops123
+      POSTGRES_DB: ${POSTGRES_DB:-cloudopsdb}
+      POSTGRES_USER: ${POSTGRES_USER:-cloudops}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cloudops123}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -28,12 +28,12 @@ services:
     ports:
       - "8080:8080"
     environment:
-      DB_URL: jdbc:postgresql://postgres:5432/cloudopsdb
+      DB_URL: ${DB_URL:-jdbc:postgresql://postgres:5432/cloudopsdb}
       DB_DRIVER: org.postgresql.Driver
-      DB_USERNAME: cloudops
-      DB_PASSWORD: cloudops123
+      DB_USERNAME: ${DB_USERNAME:-cloudops}
+      DB_PASSWORD: ${DB_PASSWORD:-cloudops123}
       HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
-      JWT_SECRET: CloudOpsDevelopmentSecretKeyForLocalDockerComposeDev2024
+      JWT_SECRET: ${JWT_SECRET:-CloudOpsDevelopmentSecretKeyForLocalDockerComposeDev2024}
       JPA_DDL_AUTO: create-drop
       SHOW_SQL: "false"
       CORS_ORIGINS: http://localhost:80,http://localhost
