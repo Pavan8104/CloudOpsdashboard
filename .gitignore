@@ -69,12 +69,3 @@ docker-compose.override.yml
 # Logs - log files ko track nahi karte
 logs/
 *.log
-# *.iml
-# .DS_Store
-# target/
-# npm-debug.log*
-# yarn-error.log
-# .angular/cache/
-# .env.local
-# docker-compose.override.yml
-# coverage/
