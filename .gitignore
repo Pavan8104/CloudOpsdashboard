@@ -41,8 +41,10 @@ tmp/
 out-tsc/
 bazel-out/
 
-# Angular cache
+# Angular cache and testing
 .angular/
+.angular/cache/
+coverage/
 
 # npm logs
 npm-debug.log
