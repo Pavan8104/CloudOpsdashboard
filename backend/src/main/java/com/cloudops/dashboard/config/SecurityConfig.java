@@ -64,14 +64,19 @@ public class SecurityConfig {
             // Security headers — defense in depth
             .headers(headers -> {
                 headers.contentSecurityPolicy(csp -> csp.policyDirectives(
-                    "default-src 'self'; script-src 'self' 'unsafe-inline'; " +
+                    "default-src 'self'; " +
+                    "script-src 'self' 'unsafe-inline'; " +
                     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-                    "font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self';"
+                    "font-src 'self' https://fonts.gstatic.com; " +
+                    "img-src 'self' data: https:; " +
+                    "connect-src 'self' https://cloudops-dashboard.onrender.com; " +
+                    "frame-ancestors 'none'; " +
+                    "form-action 'self';"
                 ));
                 headers.referrerPolicy(rp -> rp.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN));
-                headers.permissionsPolicy(pp -> pp.policy("camera=(), microphone=(), geolocation=()"));
-                headers.frameOptions(fo -> fo.sameOrigin());
-                headers.httpStrictTransportSecurity(hsts -> hsts.maxAgeInSeconds(31536000).includeSubDomains(true));
+                headers.permissionsPolicy(pp -> pp.policy("camera=(), microphone=(), geolocation=(), payment=(), usb=()"));
+                headers.frameOptions(fo -> fo.deny());
+                headers.httpStrictTransportSecurity(hsts -> hsts.maxAgeInSeconds(31536000).includeSubDomains(true).preload(true));
             })
 
             .authorizeHttpRequests(auth -> auth
