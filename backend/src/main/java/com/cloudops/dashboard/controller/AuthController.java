@@ -40,13 +40,13 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> register(@RequestBody Map<String, String> request) {
-        String username = request.get("username");
-        String email = request.get("email");
-        String password = request.get("password");
-        String fullName = request.get("fullName");
-
-        User user = authService.registerUser(username, email, password, fullName);
+    public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody com.cloudops.dashboard.dto.RegisterRequest request) {
+        User user = authService.registerUser(
+            request.getUsername(),
+            request.getEmail(),
+            request.getPassword(),
+            request.getFullName()
+        );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
             "message", "User registered successfully",
