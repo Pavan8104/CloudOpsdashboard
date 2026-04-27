@@ -67,6 +67,8 @@ public class AuthService {
     }
 
     public User registerUser(String username, String email, String password, String fullName) {
+        // Security Note: In production, implement email verification before enabling the account.
+        // Also consider checking password against a list of leaked/common passwords.
         if (userRepository.existsByUsername(username)) {
             throw new IllegalArgumentException("Username '" + username + "' is already taken.");
         }
