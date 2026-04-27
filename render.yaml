@@ -40,7 +40,7 @@ services:
       - key: SHOW_SQL
         value: "false"
       - key: CORS_ORIGINS
-        value: "*"
+        value: "https://cloudops-dashboard.onrender.com" # Replace with your actual frontend domain
       - key: PORT
         value: "8080"
 
