@@ -10,6 +10,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cloudops123}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: always
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cloudops} -d ${POSTGRES_DB:-cloudopsdb}"]
       interval: 10s
