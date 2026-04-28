@@ -9,7 +9,8 @@ COPY package*.json ./
 RUN npm ci --silent
 
 COPY . .
-RUN npm run build -- --configuration production
+RUN npm run build:prod && \
+    date +%Y-%m-%d_%H:%M:%S > /app/dist/cloudops-dashboard/browser/build-version.txt
 
 # =======================
 # STAGE 2: SERVE (Red Hat Hardened)
