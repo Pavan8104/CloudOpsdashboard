@@ -1,5 +1,6 @@
 package com.cloudops.dashboard.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -50,6 +51,7 @@ public class User {
     // BCrypt encoded password - @JsonProperty(access = WRITE_ONLY) taaki API response mein na aaye
     @NotBlank
     @Size(min = 6, message = "Password kam se kam 6 characters ka hona chahiye")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false)
     private String password;
 

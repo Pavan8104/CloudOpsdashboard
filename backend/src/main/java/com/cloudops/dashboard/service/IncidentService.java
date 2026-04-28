@@ -123,17 +123,23 @@ public class IncidentService {
     /**
      * Incident ko resolve karo - MTTR automatically calculate hoga.
      */
-    public IncidentDTO resolveIncident(Long id, String resolutionNotes, Long resolvedByUserId) {
+    public IncidentDTO resolveIncident(Long id, String resolutionNotes, String resolvedByUsername) {
         Incident incident = incidentRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Incident", "id", id));
+
+        if (resolvedByUsername != null) {
+            userRepository.findByUsernameOrEmail(resolvedByUsername, resolvedByUsername)
+                .ifPresent(incident::setResolvedBy);
+        }
 
         incident.setStatus(IncidentStatus.RESOLVED);
         incident.setResolvedAt(LocalDateTime.now());
         incident.setResolutionNotes(resolutionNotes);
 
         Incident resolved = incidentRepository.save(incident);
-        log.info("Incident RESOLVED: {} | MTTR: {} minutes",
+        log.info("Incident RESOLVED: {} by {} | MTTR: {} minutes",
             resolved.getIncidentNumber(),
+            resolvedByUsername,
             java.time.Duration.between(resolved.getStartedAt(), resolved.getResolvedAt()).toMinutes());
 
         return toDTO(resolved);
@@ -249,6 +255,11 @@ public class IncidentService {
         if (entity.getCreatedBy() != null) {
             dto.setCreatedById(entity.getCreatedBy().getId());
             dto.setCreatedByUsername(entity.getCreatedBy().getUsername());
+        }
+
+        if (entity.getResolvedBy() != null) {
+            dto.setResolvedById(entity.getResolvedBy().getId());
+            dto.setResolvedByUsername(entity.getResolvedBy().getUsername());
         }
 
         return dto;

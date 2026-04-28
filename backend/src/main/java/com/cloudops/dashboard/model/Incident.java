@@ -62,6 +62,11 @@ public class Incident {
     @JoinColumn(name = "created_by_id")
     private User createdBy;
 
+    // Kab resolve hua aur kisne resolve kiya - Audit trail
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "resolved_by_id")
+    private User resolvedBy;
+
     // Incident start time - MTTR calculate karne ke liye yeh important hai
     @Column(name = "started_at")
     private LocalDateTime startedAt;

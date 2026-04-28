@@ -54,6 +54,10 @@ public class IncidentDTO {
     private Long createdById;
     private String createdByUsername;
 
+    // Resolver info - Audit trail
+    private Long resolvedById;
+    private String resolvedByUsername;
+
     private LocalDateTime startedAt;
     private LocalDateTime resolvedAt;
 

@@ -1,6 +1,7 @@
 package com.cloudops.dashboard.exception;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -72,6 +73,21 @@ public class GlobalExceptionHandler {
             IllegalArgumentException ex, WebRequest request) {
         log.warn("Bad request: {}", ex.getMessage());
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalStateException(
+            IllegalStateException ex, WebRequest request) {
+        log.warn("Illegal state: {}", ex.getMessage());
+        return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(
+            DataIntegrityViolationException ex, WebRequest request) {
+        log.error("Database integrity violation: {}", ex.getMessage());
+        return buildErrorResponse(HttpStatus.CONFLICT,
+            "A database integrity violation occurred. This usually means a duplicate entry or invalid reference.", request);
     }
 
     @ExceptionHandler(Exception.class)

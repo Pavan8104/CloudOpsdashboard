@@ -74,8 +74,8 @@ public class IncidentController {
         if (resolutionNotes == null || resolutionNotes.isBlank()) {
             return ResponseEntity.badRequest().build();
         }
-        log.info("Incident {} resolved by: {}", id, authentication.getName());
-        return ResponseEntity.ok(incidentService.resolveIncident(id, resolutionNotes, null));
+        log.info("Incident {} resolution initiated by: {}", id, authentication.getName());
+        return ResponseEntity.ok(incidentService.resolveIncident(id, resolutionNotes, authentication.getName()));
     }
 
     @DeleteMapping("/{id}")
