@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
 
+# Avoid concurrent deployments
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -29,7 +34,9 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ps8104/cloudops-backend:latest
+          tags: |
+            ps8104/cloudops-backend:latest
+            ps8104/cloudops-backend:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -40,7 +47,9 @@ jobs:
           file: ./frontend/Dockerfile
           platforms: linux/amd64
           push: true
-          tags: ps8104/cloudops-frontend:latest
+          tags: |
+            ps8104/cloudops-frontend:latest
+            ps8104/cloudops-frontend:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
