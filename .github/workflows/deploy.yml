@@ -27,6 +27,16 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci --silent
+
+      - name: Run frontend tests
+        run: |
+          cd frontend
+          npm run test:ci
+
       - name: Build & push backend
         uses: docker/build-push-action@v5
         with:
