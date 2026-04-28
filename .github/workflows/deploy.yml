@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
 
-# Avoid concurrent deployments
+# One deployment at a time — cancel any in-flight run if a newer push lands
 concurrency:
   group: deploy-${{ github.ref }}
   cancel-in-progress: true
@@ -12,7 +12,7 @@ concurrency:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
 
     steps:
       - name: Checkout code
@@ -27,7 +27,8 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Install dependencies
+      # ── Frontend sanity check before we build images ──────────────────────
+      - name: Install frontend dependencies
         run: |
           cd frontend
           npm ci --silent
@@ -37,7 +38,8 @@ jobs:
           cd frontend
           npm run test:ci
 
-      - name: Build & push backend
+      # ── Build & push images (SHA tag is the source of truth) ──────────────
+      - name: Build & push backend image
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -47,10 +49,11 @@ jobs:
           tags: |
             ps8104/cloudops-backend:latest
             ps8104/cloudops-backend:${{ github.sha }}
+          # Cache layers so unchanged parts don't rebuild every time
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Build & push frontend
+      - name: Build & push frontend image
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
@@ -63,16 +66,20 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Redeploy backend on Railway
+      # ── Tell Railway to use the exact new image (SHA tag, not :latest) ────
+      # Using serviceInstanceUpdate so Railway pulls the fresh image instead
+      # of re-using the previously cached :latest digest (which caused the
+      # "changes not showing on live" bug).
+      - name: Point backend service to new image & deploy
         run: |
           curl -f -s -X POST "https://backboard.railway.com/graphql/v2" \
             -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -d '{"query":"mutation { serviceInstanceDeploy(serviceId: \"ad0b526f-6f55-4a22-8715-9244a8c0a437\", environmentId: \"039d041d-957e-42e3-a3cb-d940642172e3\") }"}'
+            -d "{\"query\":\"mutation { serviceInstanceUpdate(serviceId: \\\"ad0b526f-6f55-4a22-8715-9244a8c0a437\\\", environmentId: \\\"039d041d-957e-42e3-a3cb-d940642172e3\\\", input: { source: { image: \\\"ps8104/cloudops-backend:${{ github.sha }}\\\" } }) }\"}"
 
-      - name: Redeploy frontend on Railway
+      - name: Point frontend service to new image & deploy
         run: |
           curl -f -s -X POST "https://backboard.railway.com/graphql/v2" \
             -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -d '{"query":"mutation { serviceInstanceDeploy(serviceId: \"a52a6edb-d385-4032-bb68-c69993307f88\", environmentId: \"039d041d-957e-42e3-a3cb-d940642172e3\") }"}'
+            -d "{\"query\":\"mutation { serviceInstanceUpdate(serviceId: \\\"a52a6edb-d385-4032-bb68-c69993307f88\\\", environmentId: \\\"039d041d-957e-42e3-a3cb-d940642172e3\\\", input: { source: { image: \\\"ps8104/cloudops-frontend:${{ github.sha }}\\\" } }) }\"}"
