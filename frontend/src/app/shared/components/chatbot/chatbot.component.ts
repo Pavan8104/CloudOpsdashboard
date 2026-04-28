@@ -1,10 +1,14 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked, NgZone } from '@angular/core';
-import { FormControl, Validators } from '@angular/forms';
+import { FormControl, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../../core/auth/auth.service';
 import { environment } from '../../../../environments/environment';
+import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -16,7 +20,16 @@ interface ChatMessage {
 @Component({
   selector: 'app-chatbot',
   templateUrl: './chatbot.component.html',
-  styleUrls: ['./chatbot.component.scss']
+  styleUrls: ['./chatbot.component.scss'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    MatIconModule,
+    MatButtonModule,
+    MatTooltipModule
+  ]
 })
 export class ChatbotComponent implements OnInit, OnDestroy, AfterViewChecked {
 
@@ -26,6 +39,7 @@ export class ChatbotComponent implements OnInit, OnDestroy, AfterViewChecked {
   isLoading = false;
   isListening = false;
   hasSpeechSupport = false;
+  isChatbotEnabled = environment.chatbotEnabled;
   sessionId = this.generateSessionId();
   messages: ChatMessage[] = [];
   inputControl = new FormControl('', [Validators.required, Validators.maxLength(1000)]);
@@ -39,10 +53,16 @@ export class ChatbotComponent implements OnInit, OnDestroy, AfterViewChecked {
     private authService: AuthService,
     private ngZone: NgZone
   ) {
-    this.initSpeechRecognition();
+    try {
+      this.initSpeechRecognition();
+    } catch (e) {
+      console.warn('Speech recognition initialization skipped:', e);
+    }
   }
 
   private initSpeechRecognition(): void {
+    if (typeof window === 'undefined' || !environment.speechRecognitionEnabled) return;
+    
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
       this.hasSpeechSupport = true;
@@ -78,8 +98,6 @@ export class ChatbotComponent implements OnInit, OnDestroy, AfterViewChecked {
       this.recognition.onend = () => {
         this.ngZone.run(() => {
           this.isListening = false;
-          // Optionally auto-send when speech ends
-          // if (this.inputControl.value?.trim()) { this.sendMessage(); }
         });
       };
     }
