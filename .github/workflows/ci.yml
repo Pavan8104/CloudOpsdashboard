@@ -148,6 +148,11 @@ jobs:
         env:
           NODE_OPTIONS: '--max_old_space_size=4096'  # Large builds ke liye
 
+      # Verify build output
+      - name: Verify build output
+        run: |
+          ls -la frontend/dist/cloudops-dashboard/browser/index.html
+
       # Build artifacts store karo
       - name: Upload frontend build
         uses: actions/upload-artifact@v4
