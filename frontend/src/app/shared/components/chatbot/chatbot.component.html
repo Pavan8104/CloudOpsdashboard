@@ -75,7 +75,11 @@
     <!-- Input Area -->
     <div class="chat-input-area">
       <div class="input-row">
-        <button class="voice-btn" (click)="toggleVoice()" [class.listening]="isListening" [disabled]="isLoading || !hasSpeechSupport" matTooltip="Voice Input" type="button">
+        <button class="voice-btn" (click)="toggleVoice()" 
+                [class.listening]="isListening" 
+                [disabled]="isLoading || !hasSpeechSupport" 
+                [matTooltip]="hasSpeechSupport ? 'Voice Input' : 'Voice recognition not supported/requires HTTPS'" 
+                type="button">
           <mat-icon>{{ isListening ? 'mic' : 'mic_none' }}</mat-icon>
         </button>
         <textarea
@@ -92,6 +96,9 @@
         </button>
       </div>
       <div class="input-hint">Press Enter to send · Shift+Enter for new line</div>
+      <div class="chat-footer-info" style="font-size: 8px; color: #ccc; text-align: right; margin-top: 2px;">
+        CloudOps AI v1.2 · NLP Active
+      </div>
     </div>
 
   </div>
