@@ -14,6 +14,7 @@ import { MatBadgeModule } from '@angular/material/badge';
 // Components
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
+import { ChatbotComponent } from './components/chatbot/chatbot.component';
 
 @NgModule({
   declarations: [],
@@ -28,11 +29,13 @@ import { SidebarComponent } from './components/sidebar/sidebar.component';
     MatTooltipModule,
     MatBadgeModule,
     NavbarComponent,
-    SidebarComponent
+    SidebarComponent,
+    ChatbotComponent
   ],
   exports: [
     NavbarComponent,
     SidebarComponent,
+    ChatbotComponent,
     // Re-export common modules so feature modules don't have to import them again
     CommonModule,
     RouterModule,
