@@ -1,9 +1,8 @@
-name: CI — Test on feature & develop branches
+name: CI — Lint & Build on feature/develop branches
 
-# Runs on feature branches and develop to catch issues before they reach main.
-# main is intentionally excluded — deploy.yml already runs tests there
-# before building Docker images, so running CI separately on main just
-# wastes runners and doubles the queue time.
+# Runs on feature branches and develop to catch issues before they hit main.
+# main is excluded — deploy.yml owns that branch.
+# Tests are skipped for now: no spec files exist in the project yet.
 on:
   push:
     branches:
@@ -14,7 +13,7 @@ on:
       - main
       - develop
 
-# One run per branch at a time — skip the stale one if you push again quickly
+# One run per branch — cancel the stale one if you push again quickly
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -22,10 +21,10 @@ concurrency:
 jobs:
 
   # ──────────────────────────────────────────────────────────────
-  # JOB 1: Backend — unit + integration tests
+  # JOB 1: Backend — compile & verify
   # ──────────────────────────────────────────────────────────────
-  backend-test:
-    name: Backend — Test & Build
+  backend-build:
+    name: Backend — Build
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -55,31 +54,13 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Run backend tests
-        run: |
-          cd backend
-          export MAVEN_OPTS="-Xmx1024m"
-          mvn test -Dspring.profiles.active=test \
-            -Dspring.datasource.url=jdbc:postgresql://localhost:5432/cloudopsdb_test \
-            -Dspring.datasource.username=cloudops \
-            -Dspring.datasource.password=cloudops_test
-        env:
-          JWT_SECRET: test-secret-key-for-ci-only-not-production
-
-      - name: Publish test results
-        uses: dorny/test-reporter@v1
-        if: always()
-        with:
-          name: Backend Test Results
-          path: backend/target/surefire-reports/*.xml
-          reporter: java-junit
-          fail-on-error: false
-          fail-on-empty: false
-
       - name: Build JAR (verify it compiles cleanly)
         run: |
           cd backend
+          export MAVEN_OPTS="-Xmx1024m"
           mvn clean package -DskipTests -q
+        env:
+          JWT_SECRET: test-secret-key-for-ci-only
 
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
@@ -89,10 +70,10 @@ jobs:
           retention-days: 3
 
   # ──────────────────────────────────────────────────────────────
-  # JOB 2: Frontend — lint, tests, production build
+  # JOB 2: Frontend — lint & production build
   # ──────────────────────────────────────────────────────────────
-  frontend-test:
-    name: Frontend — Lint, Test & Build
+  frontend-build:
+    name: Frontend — Lint & Build
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -116,11 +97,6 @@ jobs:
         run: |
           cd frontend
           npm run lint
-
-      - name: Run tests
-        run: |
-          cd frontend
-          npm run test:ci
 
       - name: Production build
         run: |

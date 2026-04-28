@@ -27,17 +27,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # ── Frontend sanity check before we build images ──────────────────────
-      - name: Install frontend dependencies
-        run: |
-          cd frontend
-          npm ci --silent
-
-      - name: Run frontend tests
-        run: |
-          cd frontend
-          npm run test:ci
-
       # ── Build & push images ───────────────────────────────────────────────
       - name: Build & push backend image
         uses: docker/build-push-action@v5
@@ -66,27 +55,21 @@ jobs:
           cache-to: type=gha,mode=max
 
       # ── Deploy backend to Railway ─────────────────────────────────────────
-      # Step 1: Tell Railway which image to use (SHA-pinned, not :latest)
-      # Step 2: Actually trigger the deployment (serviceInstanceDeployV2)
-      # Without BOTH calls, Railway either uses the old cached digest
-      # or updates the config but never starts a new deployment.
+      # Step 1: Point Railway at the exact new image (SHA tag, not :latest)
+      # Step 2: Fire serviceInstanceDeployV2 to actually start the container
       - name: Update backend image on Railway
         run: |
           curl -f -s -X POST "https://backboard.railway.com/graphql/v2" \
             -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -d '{
-              "query": "mutation { serviceInstanceUpdate(serviceId: \"ad0b526f-6f55-4a22-8715-9244a8c0a437\", environmentId: \"039d041d-957e-42e3-a3cb-d940642172e3\", input: { source: { image: \"ps8104/cloudops-backend:${{ github.sha }}\" } }) }"
-            }'
+            -d "{\"query\":\"mutation { serviceInstanceUpdate(serviceId: \\\"ad0b526f-6f55-4a22-8715-9244a8c0a437\\\", environmentId: \\\"039d041d-957e-42e3-a3cb-d940642172e3\\\", input: { source: { image: \\\"ps8104/cloudops-backend:${{ github.sha }}\\\" } }) }\"}"
 
       - name: Trigger backend deployment on Railway
         run: |
           curl -f -s -X POST "https://backboard.railway.com/graphql/v2" \
             -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -d '{
-              "query": "mutation { serviceInstanceDeployV2(serviceId: \"ad0b526f-6f55-4a22-8715-9244a8c0a437\", environmentId: \"039d041d-957e-42e3-a3cb-d940642172e3\") }"
-            }'
+            -d '{"query":"mutation { serviceInstanceDeployV2(serviceId: \"ad0b526f-6f55-4a22-8715-9244a8c0a437\", environmentId: \"039d041d-957e-42e3-a3cb-d940642172e3\") }"}'
 
       # ── Deploy frontend to Railway ────────────────────────────────────────
       - name: Update frontend image on Railway
@@ -94,15 +77,11 @@ jobs:
           curl -f -s -X POST "https://backboard.railway.com/graphql/v2" \
             -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -d '{
-              "query": "mutation { serviceInstanceUpdate(serviceId: \"a52a6edb-d385-4032-bb68-c69993307f88\", environmentId: \"039d041d-957e-42e3-a3cb-d940642172e3\", input: { source: { image: \"ps8104/cloudops-frontend:${{ github.sha }}\" } }) }"
-            }'
+            -d "{\"query\":\"mutation { serviceInstanceUpdate(serviceId: \\\"a52a6edb-d385-4032-bb68-c69993307f88\\\", environmentId: \\\"039d041d-957e-42e3-a3cb-d940642172e3\\\", input: { source: { image: \\\"ps8104/cloudops-frontend:${{ github.sha }}\\\" } }) }\"}"
 
       - name: Trigger frontend deployment on Railway
         run: |
           curl -f -s -X POST "https://backboard.railway.com/graphql/v2" \
             -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -d '{
-              "query": "mutation { serviceInstanceDeployV2(serviceId: \"a52a6edb-d385-4032-bb68-c69993307f88\", environmentId: \"039d041d-957e-42e3-a3cb-d940642172e3\") }"
-            }'
+            -d '{"query":"mutation { serviceInstanceDeployV2(serviceId: \"a52a6edb-d385-4032-bb68-c69993307f88\", environmentId: \"039d041d-957e-42e3-a3cb-d940642172e3\") }"}'
