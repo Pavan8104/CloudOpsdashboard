@@ -14,24 +14,27 @@ RUN mvn clean package -DskipTests
 
 
 # =======================
-# STAGE 2: RUNTIME (Red Hat Hardened)
+# STAGE 2: RUNTIME
 # =======================
-FROM registry.access.redhat.com/ubi8/openjdk-21-runtime:latest AS runtime
-
-# Red Hat UBI images run as user 185 (jboss) by default for safety
-USER 185
+# eclipse-temurin:alpine is the same JDK vendor as the builder stage,
+# lightweight, and reliably available on Docker Hub — no registry auth needed.
+FROM eclipse-temurin:21-jre-alpine AS runtime
 
 WORKDIR /app
+
+# Non-root user for security
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
 
 # Copy JAR from builder stage
 COPY --from=builder /app/target/*.jar app.jar
 
 EXPOSE 8080
 
-# Enterprise-grade JVM settings
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom"
 
+# wget ships with busybox in Alpine — no curl needed
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8080/api/actuator/health || exit 1
+    CMD wget -q --spider http://localhost:8080/api/actuator/health || exit 1
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
