@@ -13,5 +13,6 @@ export const environment = {
   userKey: 'cloudops_user',
   // Feature flags - Production mein bhi on rakho
   chatbotEnabled: true,
+  // Note: Speech recognition requires HTTPS in production browsers
   speechRecognitionEnabled: true
 };
