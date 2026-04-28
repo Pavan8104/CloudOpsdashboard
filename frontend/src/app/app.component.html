@@ -7,11 +7,11 @@
 
   <app-sidebar [isOpen]="sidebarOpen" [isMobile]="isMobile"></app-sidebar>
 
+  <app-chatbot></app-chatbot>
+
   <main class="main-content" [class.sidebar-open]="sidebarOpen && !isMobile" [class.sidebar-closed]="!sidebarOpen || isMobile">
     <router-outlet></router-outlet>
   </main>
-
-  <app-chatbot></app-chatbot>
 
 </div>
 
