@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked, 
 import { FormControl, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { takeUntil, timeout } from 'rxjs/operators';
 import { AuthService } from '../../../core/auth/auth.service';
 import { environment } from '../../../../environments/environment';
 import { CommonModule } from '@angular/common';
@@ -175,7 +175,10 @@ export class ChatbotComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.http.post<any>(`${environment.apiUrl}/chatbot/message`, {
       message: text,
       sessionId: this.sessionId
-    }, { headers }).pipe(takeUntil(this.destroy$)).subscribe({
+    }, { headers }).pipe(
+      takeUntil(this.destroy$),
+      timeout(15000)
+    ).subscribe({
       next: (response) => {
         this.messages.push({
           role: 'assistant',
