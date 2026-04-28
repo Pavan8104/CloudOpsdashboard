@@ -13,4 +13,7 @@ export const environment = {
   // Token storage key - localStorage mein save hoga
   tokenKey: 'cloudops_token',
   userKey: 'cloudops_user',
+  // Feature flags
+  chatbotEnabled: true,
+  speechRecognitionEnabled: true
 };

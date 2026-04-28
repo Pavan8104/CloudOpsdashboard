@@ -11,4 +11,7 @@ export const environment = {
   debug: false,
   tokenKey: 'cloudops_token',
   userKey: 'cloudops_user',
+  // Feature flags - Production mein bhi on rakho
+  chatbotEnabled: true,
+  speechRecognitionEnabled: true
 };
