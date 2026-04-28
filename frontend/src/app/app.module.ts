@@ -33,7 +33,6 @@ import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { ServiceHealthComponent } from './features/service-health/service-health.component';
 import { IncidentsComponent } from './features/incidents/incidents.component';
 import { ResourceUsageComponent } from './features/resource-usage/resource-usage.component';
-import { ChatbotComponent } from './shared/components/chatbot/chatbot.component';
 import { SharedModule } from './shared/shared.module';
 import { JwtInterceptor } from './core/interceptors/jwt.interceptor';
 
@@ -44,7 +43,6 @@ import { JwtInterceptor } from './core/interceptors/jwt.interceptor';
     DashboardComponent,
     IncidentsComponent,
     ResourceUsageComponent,
-    ChatbotComponent,
   ],
   imports: [
     BrowserModule,
