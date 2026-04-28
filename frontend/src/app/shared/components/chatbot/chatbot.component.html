@@ -1,4 +1,4 @@
-<div class="chatbot-wrapper">
+<div class="chatbot-wrapper" *ngIf="isChatbotEnabled">
 
   <!-- Floating Trigger Button -->
   <button class="chatbot-fab" (click)="toggleChat()" [class.active]="isOpen"
