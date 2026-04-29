@@ -4,7 +4,6 @@ on:
   push:
     branches: [main]
 
-# One deployment at a time — cancel any in-flight run if a newer push lands
 concurrency:
   group: deploy-${{ github.ref }}
   cancel-in-progress: true
@@ -12,12 +11,28 @@ concurrency:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
 
     steps:
+      # ── 0. Preflight: fail fast with clear message if any secret is missing ──
+      - name: Verify required secrets
+        run: |
+          MISSING=0
+          if [ -z "$DH_USER" ];  then echo "ERROR: DOCKERHUB_USERNAME secret is not set";  MISSING=1; fi
+          if [ -z "$DH_TOKEN" ]; then echo "ERROR: DOCKERHUB_TOKEN secret is not set";      MISSING=1; fi
+          if [ -z "$RW_TOKEN" ]; then echo "ERROR: RAILWAY_TOKEN secret is not set";        MISSING=1; fi
+          if [ "$MISSING" -eq 0 ]; then echo "All secrets present — continuing"; fi
+          exit $MISSING
+        env:
+          DH_USER:  ${{ secrets.DOCKERHUB_USERNAME }}
+          DH_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          RW_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      # ── 1. Checkout ────────────────────────────────────────────────────────
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # ── 2. Docker setup ────────────────────────────────────────────────────
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -27,7 +42,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # ── Build & push images ───────────────────────────────────────────────
+      # ── 3. Build & push backend ────────────────────────────────────────────
       - name: Build & push backend image
         uses: docker/build-push-action@v5
         with:
@@ -41,6 +56,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # ── 4. Build & push frontend ───────────────────────────────────────────
       - name: Build & push frontend image
         uses: docker/build-push-action@v5
         with:
@@ -54,34 +70,83 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # ── Deploy backend to Railway ─────────────────────────────────────────
-      # Step 1: Point Railway at the exact new image (SHA tag, not :latest)
-      # Step 2: Fire serviceInstanceDeployV2 to actually start the container
-      - name: Update backend image on Railway
+      # ── 5. Deploy to Railway ───────────────────────────────────────────────
+      # Uses Python to avoid any bash quoting/escaping issues.
+      # Prints the full API response so failures are visible in the log.
+      - name: Deploy backend & frontend to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          GIT_SHA:       ${{ github.sha }}
         run: |
-          curl -f -s -X POST "https://backboard.railway.com/graphql/v2" \
-            -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -d "{\"query\":\"mutation { serviceInstanceUpdate(serviceId: \\\"ad0b526f-6f55-4a22-8715-9244a8c0a437\\\", environmentId: \\\"039d041d-957e-42e3-a3cb-d940642172e3\\\", input: { source: { image: \\\"ps8104/cloudops-backend:${{ github.sha }}\\\" } }) }\"}"
+          python3 << 'PYEOF'
+          import urllib.request, json, os, sys
 
-      - name: Trigger backend deployment on Railway
-        run: |
-          curl -f -s -X POST "https://backboard.railway.com/graphql/v2" \
-            -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -d '{"query":"mutation { serviceInstanceDeployV2(serviceId: \"ad0b526f-6f55-4a22-8715-9244a8c0a437\", environmentId: \"039d041d-957e-42e3-a3cb-d940642172e3\") }"}'
+          TOKEN = os.environ["RAILWAY_TOKEN"]
+          SHA   = os.environ["GIT_SHA"]
+          API   = "https://backboard.railway.com/graphql/v2"
 
-      # ── Deploy frontend to Railway ────────────────────────────────────────
-      - name: Update frontend image on Railway
-        run: |
-          curl -f -s -X POST "https://backboard.railway.com/graphql/v2" \
-            -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -d "{\"query\":\"mutation { serviceInstanceUpdate(serviceId: \\\"a52a6edb-d385-4032-bb68-c69993307f88\\\", environmentId: \\\"039d041d-957e-42e3-a3cb-d940642172e3\\\", input: { source: { image: \\\"ps8104/cloudops-frontend:${{ github.sha }}\\\" } }) }\"}"
+          BACKEND_SVC  = "ad0b526f-6f55-4a22-8715-9244a8c0a437"
+          FRONTEND_SVC = "a52a6edb-d385-4032-bb68-c69993307f88"
+          ENV_ID       = "039d041d-957e-42e3-a3cb-d940642172e3"
 
-      - name: Trigger frontend deployment on Railway
-        run: |
-          curl -f -s -X POST "https://backboard.railway.com/graphql/v2" \
-            -H "Authorization: Bearer ${{ secrets.RAILWAY_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -d '{"query":"mutation { serviceInstanceDeployV2(serviceId: \"a52a6edb-d385-4032-bb68-c69993307f88\", environmentId: \"039d041d-957e-42e3-a3cb-d940642172e3\") }"}'
+          def gql(label, query):
+              print(f"\n--- {label} ---")
+              payload = json.dumps({"query": query}).encode()
+              req = urllib.request.Request(
+                  API, data=payload,
+                  headers={"Authorization": f"Bearer {TOKEN}",
+                           "Content-Type": "application/json"}
+              )
+              try:
+                  resp = urllib.request.urlopen(req)
+                  body = json.loads(resp.read().decode())
+                  print(json.dumps(body, indent=2))
+                  if "errors" in body:
+                      print(f"GraphQL error in [{label}]", file=sys.stderr)
+                      sys.exit(1)
+              except urllib.error.HTTPError as e:
+                  print(f"HTTP {e.code}: {e.read().decode()}", file=sys.stderr)
+                  sys.exit(1)
+
+          # ── Backend ────────────────────────────────────────────────────
+          gql("update backend image", f"""
+              mutation {{
+                  serviceInstanceUpdate(
+                      serviceId: "{BACKEND_SVC}",
+                      environmentId: "{ENV_ID}",
+                      input: {{ source: {{ image: "ps8104/cloudops-backend:{SHA}" }} }}
+                  )
+              }}
+          """)
+
+          gql("deploy backend", f"""
+              mutation {{
+                  serviceInstanceDeployV2(
+                      serviceId: "{BACKEND_SVC}",
+                      environmentId: "{ENV_ID}"
+                  )
+              }}
+          """)
+
+          # ── Frontend ───────────────────────────────────────────────────
+          gql("update frontend image", f"""
+              mutation {{
+                  serviceInstanceUpdate(
+                      serviceId: "{FRONTEND_SVC}",
+                      environmentId: "{ENV_ID}",
+                      input: {{ source: {{ image: "ps8104/cloudops-frontend:{SHA}" }} }}
+                  )
+              }}
+          """)
+
+          gql("deploy frontend", f"""
+              mutation {{
+                  serviceInstanceDeployV2(
+                      serviceId: "{FRONTEND_SVC}",
+                      environmentId: "{ENV_ID}"
+                  )
+              }}
+          """)
+
+          print("\nDone — both services triggered on Railway.")
+          PYEOF
